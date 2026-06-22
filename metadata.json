@@ -1,0 +1,6 @@
+{
+  "name": "Presentation Builder",
+  "description": "Plataforma para geração, edição, organização e visualização de apresentações de treinamento do Industrial OS.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

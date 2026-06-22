@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,700;0,900;1,400;1,700;1,900&family=Inter:wght@450;500;605;700;800&family=JetBrains+Mono:wght@400;500;650&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Exo 2", sans-serif;
+}
+
+body {
+  background-color: #050505;
+  color: #E2E8F0;
+  margin: 0;
+  height: 100%;
+}
+
+@layer utilities {
+  .animate-fadeIn {
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  .animate-shimmer {
+    animation: speedShimmer 1.8s infinite linear;
+  }
+  
+  .bg-carbon-pattern {
+    background-color: transparent;
+    background-image: 
+      linear-gradient(45deg, #121214 25%, transparent 25%), 
+      linear-gradient(-45deg, #121214 25%, transparent 25%), 
+      linear-gradient(45deg, transparent 75%, #121214 75%), 
+      linear-gradient(-45deg, transparent 75%, #121214 75%);
+    background-size: 10px 10px;
+    background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
+  }
+
+  .bg-industrial-stripes {
+    background-color: transparent;
+    background-image: repeating-linear-gradient(
+      45deg,
+      #FF5A0015,
+      #FF5A0015 8px,
+      transparent 8px,
+      transparent 16px
+    );
+  }
+
+  .bg-cyber-dots {
+    background-color: transparent;
+    background-image: radial-gradient(#D000FF15 1.5px, transparent 1.5px);
+    background-size: 16px 16px;
+  }
+
+  .bg-dots-pattern {
+    background-color: transparent;
+    background-image: radial-gradient(#ffffff08 1px, transparent 1px);
+    background-size: 12px 12px;
+  }
+
+  .bg-dots-light {
+    background-color: transparent;
+    background-image: radial-gradient(#0f172a08 1.2px, transparent 1.2px);
+    background-size: 12px 12px;
+  }
+
+  .bg-grid-slate-900 {
+    background-color: transparent;
+    background-image: 
+      linear-gradient(to right, #1e293b20 1px, transparent 1px),
+      linear-gradient(to bottom, #1e293b20 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes speedShimmer {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  50% {
+    transform: translateX(100%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(250%) skewX(-20deg);
+  }
+}
+
+/* Printing logic for physical slide handouts / PDFs */
+@media print {
+  /* Hide all interactive app layout chrome */
+  #main-brand-navbar,
+  #dashboard-core-view,
+  #presentation-editor-viewport,
+  #presenter-mode-container,
+  #export-modal-panel,
+  #media-library-core,
+  button,
+  form,
+  header,
+  footer,
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-family: "Inter", sans-serif !important;
+  }
+
+  #printable-master-deck {
+    display: block !important;
+  }
+
+  .printable-slide-card {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    height: 98vh !important;
+    padding: 3rem !important;
+    border: 1px solid #e2e8f0 !important;
+    margin-bottom: 2rem !important;
+    box-sizing: border-box !important;
+  }
+}
+
+/* Base Hidden state for print container in normal visual interface */
+#printable-master-deck {
+  display: none;
+}
+
