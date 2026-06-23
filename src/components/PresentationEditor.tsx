@@ -4,7 +4,7 @@ import { CATEGORIES } from '../mockData';
 import { 
   Save, Eye, ArrowLeft, Trash2, Plus, MoveUp, MoveDown, Layout, 
   Image as ImageIcon, Video, AlignLeft, ListPlus, AlertCircle, 
-  FileDown, Check, Settings, Copy, HelpCircle, AlertTriangle, Lightbulb, Focus, Layers, GitCommit, Play
+  FileDown, Check, Settings, Copy, HelpCircle, AlertTriangle, Lightbulb, Focus, Layers, GitCommit, Play, Sparkles
 } from 'lucide-react';
 
 interface PresentationEditorProps {
@@ -534,6 +534,104 @@ export default function PresentationEditor({
             {activeSlide ? (
               <div className="space-y-4">
                 
+                {/* BIBLIOTECA DE TEMPLATES DE LAYOUT REUTILIZÁVEIS */}
+                <div className="bg-[#12141a]/95 p-4 rounded-lg border border-[#1E293B] shadow-inner space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#1E293B] pb-2">
+                    <span className="text-[10.5px] font-bold text-blue-400 font-mono flex items-center gap-1.5 uppercase">
+                      <Sparkles className="w-3.5 h-3.5 animate-pulse" /> BIBLIOTECA DE LAYOUTS INDUSTRIAL OS
+                    </span>
+                    <span className="text-[8.5px] bg-[#1E293B] text-slate-400 px-1.5 py-0.5 rounded font-mono uppercase">TEMPLATES REUTILIZÁVEIS</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
+                    Escolha um modelo abaixo para estruturar de forma automática o conteúdo, as tarefas e a conformidade do treinamento deste slide:
+                  </p>
+                  
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {[
+                      { 
+                        id: 'cover', 
+                        label: '📌 Capa do Módulo', 
+                        desc: 'Introdução e boas-vindas do circuito',
+                        fields: {
+                          layout: 'cover',
+                          title: 'Treinamento: Integração de Posto',
+                          subtitle: 'Manual Geral e Procedimentos de Automação',
+                          freeText: 'Este treinamento engloba as regras de conduta, segurança integrada, preenchimento de checklists de produção e inicialização de telemetria base.'
+                        }
+                      },
+                      { 
+                        id: 'content', 
+                        label: '📝 Página de Conteúdo', 
+                        desc: 'Fundamentações e conceitos técnicos',
+                        fields: {
+                          layout: 'content',
+                          title: 'Fundamentos de Processamento',
+                          subtitle: 'Otimização de Ciclo e Redução de Gargalos',
+                          freeText: 'Conforme o padrão da filosofia Industrial OS, cada ciclo operacional deve ser documentado de forma contínua pelo operador através da interface do cockpit, garantindo telemetria exata.'
+                        }
+                      },
+                      { 
+                        id: 'step-by-step', 
+                        label: '🪜 Passo a Passo POP', 
+                        desc: 'Sequenciamento operacional de campo',
+                        fields: {
+                          layout: 'step-by-step',
+                          title: 'Instrução de Trabalho Monitorada (POP)',
+                          subtitle: 'Sequência Crítica de Operação',
+                          freeText: 'Siga exatamente os passos descritos para evitar alertas de parada não planejada no painel principal.'
+                        }
+                      },
+                      { 
+                        id: 'checklist', 
+                        label: '✅ Checklist Operacional', 
+                        desc: 'Validação preventiva de conformidade',
+                        fields: {
+                          layout: 'checklist',
+                          title: 'Checklist de Proteção e Setup de Segurança',
+                          subtitle: 'Validações de Campo Obrigatórias',
+                          freeText: 'Realizar a conferência de cada item abaixo antes de destravar o botão físico de emergência.'
+                        }
+                      }
+                    ].map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => {
+                          if (confirm(`Tem certeza de que deseja aplicar o template "${tpl.label}"? Isso reestruturará automaticamente os campos do slide ativo.`)) {
+                            updateSlideField(activeSlide.id, 'layout', tpl.fields.layout);
+                            updateSlideField(activeSlide.id, 'title', tpl.fields.title);
+                            updateSlideField(activeSlide.id, 'subtitle', tpl.fields.subtitle);
+                            updateSlideField(activeSlide.id, 'freeText', tpl.fields.freeText);
+                            
+                            // Load custom default items if applicable
+                            if (tpl.id === 'step-by-step') {
+                              updateSlideField(activeSlide.id, 'listItems', [
+                                { id: 'step-1-' + Date.now(), text: 'Passo 1: Ligar o cockpit e autenticar o operador.' },
+                                { id: 'step-2-' + Date.now(), text: 'Passo 2: Inspecionar visualmente o sensor de barreira fotoelétrica.' },
+                                { id: 'step-3-' + Date.now(), text: 'Passo 3: Carregar a ordem de produção (OP) escaneando o código de barras.' },
+                                { id: 'step-4-' + Date.now(), text: 'Passo 4: Confirmar início e acompanhar indicadores na tela.' }
+                              ]);
+                            } else if (tpl.id === 'checklist') {
+                              updateSlideField(activeSlide.id, 'listItems', [
+                                { id: 'chk-1-' + Date.now(), text: 'O operador está utilizando óculos de proteção e calçado antiderrapante?', checked: false },
+                                { id: 'chk-2-' + Date.now(), text: 'A chave de by-pass de segurança está posicionada em modo ATIVO?', checked: false },
+                                { id: 'chk-3-' + Date.now(), text: 'A lixeira coletora de cavacos está devidamente esvaziada?', checked: false },
+                                { id: 'chk-4-' + Date.now(), text: 'Não há objetos obstruindo as portas mecânicas?', checked: false }
+                              ]);
+                            } else {
+                              updateSlideField(activeSlide.id, 'listItems', []);
+                            }
+                          }
+                        }}
+                        className="p-2 border border-[#1E293B] hover:border-blue-500 bg-[#0A0D14] hover:bg-blue-950/25 text-left rounded-lg transition-all cursor-pointer block w-full group"
+                      >
+                        <span className="block text-[10.5px] font-bold text-slate-200 group-hover:text-blue-400 font-mono">{tpl.label}</span>
+                        <span className="block text-[8.5px] text-slate-500 mt-0.5 leading-snug">{tpl.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 1. LAYOUT CLASSIFICATION GRID SELECTOR */}
                 <div>
                   <label className="block text-[10.5px] font-bold text-slate-400 uppercase font-mono tracking-wider mb-2">Selecione o Layout Universal</label>

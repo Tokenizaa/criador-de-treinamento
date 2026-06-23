@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Presentation, Category, Status, Slide } from '../types';
+import { Presentation, Category, Status, Slide, ThemeStyle } from '../types';
 import { CATEGORIES } from '../mockData';
+import { MODULE_TEMPLATES, generateSlidesForModule } from '../lib/trainingTemplates';
 import { 
   Plus, Search, Presentation as PresIcon, Calendar, ArrowRight,
-  TrendingUp, Layers, CheckCircle2, FileText, AlertCircle, Trash2, Copy, Play
+  TrendingUp, Layers, CheckCircle2, FileText, AlertCircle, Trash2, Copy, Play, Cpu,
+  Sparkles, ChevronDown, ChevronUp, Award, Activity, Info
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -12,14 +14,60 @@ interface DashboardProps {
   onDeletePresentation: (id: string) => void;
   onDuplicatePresentation: (id: string) => void;
   onAddPresentation: (newPres: Presentation) => void;
+  currentThemeStyle: ThemeStyle;
+  onThemeStyleChange: (style: ThemeStyle) => void;
+  theme: any;
 }
+
+interface AuditedModule {
+  id: string;
+  name: string;
+  phase: string;
+  complexity: string;
+  maturity: string;
+  slidesCount: number;
+  format: string;
+  captures: string;
+  businessValue: string;
+  category: Category;
+  sinopse: string;
+}
+
+const AUDITED_MODULES: AuditedModule[] = [
+  { id: 'empresa', name: 'Empresa', phase: 'Fase 1', complexity: 'Muito Simples', maturity: 'Primeiro Lote', slidesCount: 5, format: 'Passo a Passo', captures: 'Baixa', businessValue: 'Alto', category: 'Cadastros', sinopse: 'Cadastro da identidade da fábrica (razão social, CNPJ, endereço, marca) para validação fiscal e relatórios.' },
+  { id: 'setores', name: 'Setores', phase: 'Fase 2', complexity: 'Simples', maturity: 'Operação Inicial', slidesCount: 6, format: 'Passo a Passo + Checklist', captures: 'Média', businessValue: 'Médio', category: 'Cadastros', sinopse: 'Estruturação física da fábrica (galpões, linhas, áreas administrativas) para alocação de recursos.' },
+  { id: 'funcionarios', name: 'Funcionários', phase: 'Fase 2', complexity: 'Médio', maturity: 'Operação Inicial', slidesCount: 7, format: 'Passo a Passo + Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Cadastros', sinopse: 'Cadastro de equipe, funções, turnos e alocações de colaboradores por posto produtivo.' },
+  { id: 'equipamentos', name: 'Equipamentos', phase: 'Fase 2', complexity: 'Médio', maturity: 'Operação Inicial', slidesCount: 7, format: 'Passo a Passo + Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Cadastros', sinopse: 'Estações de trabalho, prensas e maquinários físicos com métricas de capacidade e manutenção.' },
+  { id: 'ferramentas', name: 'Ferramentas', phase: 'Fase 3', complexity: 'Simples', maturity: 'Empresa Estruturada', slidesCount: 5, format: 'Passo a Passo', captures: 'Baixa', businessValue: 'Médio', category: 'Cadastros', sinopse: 'Controle de moldes, gabaritos, facas de corte e estampos de precisão da colchoaria.' },
+  { id: 'materia_prima', name: 'Matérias-Primas', phase: 'Fase 1', complexity: 'Médio', maturity: 'Primeiro Lote', slidesCount: 8, format: 'Passo a Passo + Vídeo', captures: 'Alta', businessValue: 'Muito Alto', category: 'Cadastros', sinopse: 'Cadastro de bobinas, blocos de espuma sob medida e insumos de colagem com controle de estoque.' },
+  { id: 'fornecedores', name: 'Fornecedores', phase: 'Fase 1', complexity: 'Simples', maturity: 'Primeiro Lote', slidesCount: 6, format: 'Passo a Passo', captures: 'Média', businessValue: 'Alto', category: 'Cadastros', sinopse: 'Parceiros logísticos, distribuidores químicos de poliol e isocianato e fornecedores de embalagens.' },
+  { id: 'produtos', name: 'Produtos', phase: 'Fase 1', complexity: 'Complexo', maturity: 'Primeiro Lote', slidesCount: 8, format: 'Vídeo + Passo a Passo', captures: 'Crítica', businessValue: 'Muito Alto', category: 'Cadastros', sinopse: 'Cadastro de colchoaria acabada, densidades de espuma (D28, D33, D45) e regras comerciais.' },
+  { id: 'componentes', name: 'Componentes', phase: 'Fase 3', complexity: 'Médio', maturity: 'Empresa Estruturada', slidesCount: 7, format: 'Processo + Vídeo', captures: 'Alta', businessValue: 'Médio', category: 'Cadastros', sinopse: 'Cadastro de kits semi-acabados, capas de matelassê e subconjuntos de mola ensacada.' },
+  { id: 'bom', name: 'BOM', phase: 'Fase 1', complexity: 'Muito Complexo', maturity: 'Primeiro Lote', slidesCount: 8, format: 'Vídeo + Simulação', captures: 'Crítica', businessValue: 'Muito Alto', category: 'Produção', sinopse: 'Lista de Materiais (Bill of Materials) detalhando as proporções de bloco, cola e embalagem de cada SKU.' },
+  { id: 'processos', name: 'Processos', phase: 'Fase 2', complexity: 'Muito Complexo', maturity: 'Operação Inicial', slidesCount: 8, format: 'Vídeo + Simulação', captures: 'Crítica', businessValue: 'Alto', category: 'Produção', sinopse: 'Escalonamento operacional sequencial, tempos de setup e fluxo de balanceamento das linhas.' },
+  { id: 'cronometragem', name: 'Cronometragem', phase: 'Fase 4', complexity: 'Muito Complexo', maturity: 'Operação Avançada', slidesCount: 8, format: 'Processo + Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Produção', sinopse: 'Tomada de tempos cronometrados, avaliação de ritmo, fator de tolerância e determinação de Tempo Padrão.' },
+  { id: 'capacidade', name: 'Capacidade', phase: 'Fase 3', complexity: 'Muito Complexo', maturity: 'Operação Inicial', slidesCount: 8, format: 'Processo + Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Produção', sinopse: 'Carga de postos de trabalho e restrições físicas de produção para cálculo de lead-time exato.' },
+  { id: 'ordem_producao', name: 'Ordens de Produção (OPs)', phase: 'Fase 1', complexity: 'Médio', maturity: 'Primeiro Lote', slidesCount: 8, format: 'Vídeo + Passo a Passo', captures: 'Alta', businessValue: 'Muito Alto', category: 'Produção', sinopse: 'Emissão, agendamento de sequenciamento e monitoramento de ordens em progresso no chão de fábrica.' },
+  { id: 'lotes', name: 'Lotes', phase: 'Fase 2', complexity: 'Médio', maturity: 'Operação Inicial', slidesCount: 7, format: 'Passo a Passo + Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Qualidade', sinopse: 'Codificação, rastreamento físico de caixas e controle de validade legal de blocos espumados.' },
+  { id: 'estoque_industrial', name: 'Estoque Industrial', phase: 'Fase 1', complexity: 'Médio', maturity: 'Primeiro Lote', slidesCount: 8, format: 'Passo a Passo + Vídeo', captures: 'Alta', businessValue: 'Muito Alto', category: 'Estoque', sinopse: 'Níveis de segurança mínimo, classificação de curva ABC e inventário rotativo integrado.' },
+  { id: 'movimentacoes', name: 'Movimentações', phase: 'Fase 2', complexity: 'Médio', maturity: 'Operação Inicial', slidesCount: 8, format: 'Passo a Passo + Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Estoque', sinopse: 'Controle de fluxo de entradas, saídas internas, devoluções de material e perdas físicas.' },
+  { id: 'apontamentos', name: 'Apontamentos', phase: 'Fase 1', complexity: 'Médio', maturity: 'Primeiro Lote', slidesCount: 8, format: 'Vídeo + Passo a Passo', captures: 'Alta', businessValue: 'Muito Alto', category: 'Produção', sinopse: 'Monitoramento contínuo de produtividade, registro de refugos da colchoaria e paradas de barreira.' },
+  { id: 'consumo_materiais', name: 'Consumo de Materiais', phase: 'Fase 2', complexity: 'Médio', maturity: 'Operação Inicial', slidesCount: 7, format: 'Processo + Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Estoque', sinopse: 'Aferição de consumo de insumo real contra o planejado, perdas e rendimento de insumos industriais.' },
+  { id: 'producao_tempo_real', name: 'Produção em Tempo Real', phase: 'Fase 4', complexity: 'Médio', maturity: 'Operação Avançada', slidesCount: 7, format: 'Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Produção', sinopse: 'Visores TV, painéis Andon eletrônicos, cronômetro de ciclos e alarmes de parada.' },
+  { id: 'qualidade', name: 'Qualidade', phase: 'Fase 1', complexity: 'Médio', maturity: 'Primeiro Lote', slidesCount: 8, format: 'Vídeo + Passo a Passo', captures: 'Alta', businessValue: 'Alto', category: 'Qualidade', sinopse: 'Formulários rápidos de conformidade para laudos, aprovações, retenções de blocos e retrabalho.' },
+  { id: 'rastreabilidade', name: 'Rastreabilidade', phase: 'Fase 3', complexity: 'Médio', maturity: 'Operação Inicial', slidesCount: 7, format: 'Vídeo', captures: 'Alta', businessValue: 'Alto', category: 'Qualidade', sinopse: 'Rastreamento completo do histórico da peça (quem produziu, qualidade dos insumos e testes).' },
+  { id: 'apresentacoes', name: 'Apresentações', phase: 'Fase 4', complexity: 'Médio', maturity: 'Empresa Estruturada', slidesCount: 6, format: 'Vídeo + Simulação', captures: 'Alta', businessValue: 'Médio', category: 'Treinamentos', sinopse: 'Configuração de novos circuitos de engajamento utilizando layouts imersivos dinâmicos.' }
+];
 
 export default function Dashboard({
   presentations,
   onSelectPresentation,
   onDeletePresentation,
   onDuplicatePresentation,
-  onAddPresentation
+  onAddPresentation,
+  currentThemeStyle,
+  onThemeStyleChange,
+  theme
 }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'Todos'>('Todos');
@@ -31,6 +79,13 @@ export default function Dashboard({
   const [newCategory, setNewCategory] = useState<Category>('Visão Geral');
   const [newStatus, setNewStatus] = useState<Status>('Rascunho');
   const [preloadTemplate, setPreloadTemplate] = useState<boolean>(true);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('generic');
+
+  // Training Audit Section States
+  const [isAuditExpanded, setIsAuditExpanded] = useState<boolean>(true);
+  const [auditFilterPhase, setAuditFilterPhase] = useState<string>('Todos');
+  const [auditSearchTerm, setAuditSearchTerm] = useState<string>('');
+  const [successToast, setSuccessToast] = useState<{ message: string; moduleName: string } | null>(null);
 
   // Calculate high level KPI values
   const totalCount = presentations.length;
@@ -50,6 +105,24 @@ export default function Dashboard({
     return matchesSearch && matchesCategory;
   });
 
+  // Audit filtering and calculations
+  const activeAuditedModules = AUDITED_MODULES.filter((mod) => {
+    const matchesPhase = auditFilterPhase === 'Todos' || mod.phase === auditFilterPhase;
+    const matchesSearch = mod.name.toLowerCase().includes(auditSearchTerm.toLowerCase()) || 
+                          mod.sinopse.toLowerCase().includes(auditSearchTerm.toLowerCase()) ||
+                          mod.category.toLowerCase().includes(auditSearchTerm.toLowerCase());
+    return matchesPhase && matchesSearch;
+  });
+
+  const activeModulesCount = AUDITED_MODULES.filter(m => 
+    presentations.some(p => 
+      p.title.toLowerCase() === m.name.toLowerCase() || 
+      p.title.toLowerCase() === `treinamento: ${m.name.toLowerCase()}`
+    )
+  ).length;
+
+  const coveragePercent = Math.round((activeModulesCount / 23) * 100);
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
@@ -57,54 +130,7 @@ export default function Dashboard({
     let preloadedSlides: Slide[] = [];
 
     if (preloadTemplate) {
-      preloadedSlides = [
-        {
-          id: 's-t1-' + Date.now(),
-          title: `Treinamento: ${newTitle}`,
-          subtitle: `Módulo básico de capacitação do Industrial OS`,
-          freeText: `Este treinamento apresenta as diretrizes oficiais de uso operacional e cadastros de segurança para o módulo de ${newCategory}.`,
-          layout: 'hero'
-        },
-        {
-          id: 's-t2-' + Date.now(),
-          title: 'Objetivos Educacionais',
-          subtitle: 'Competências a serem adquiridas',
-          freeText: 'Ao final deste treinamento presencial rápido, o operador deverá ser capaz de compreender as principais regras de fluxo e identificar os gargalos do sistema.',
-          layout: 'bullets-only',
-          listItems: [
-            { id: 'b1-' + Date.now(), text: 'Entender a importância dos cadastros corretos e unificados' },
-            { id: 'b2-' + Date.now(), text: 'Garantir preenchimento dos apontamentos logo na saída da máquina' },
-            { id: 'b3-' + Date.now(), text: 'Ativar alertas de paradas de forma imediata na TV central' }
-          ]
-        },
-        {
-          id: 's-t3-' + Date.now(),
-          title: 'Passo a Passo Operacional',
-          subtitle: 'Sequência de Procedimentos Mandatórios',
-          freeText: '1. Autenticar sua conta digitando sua senha do chão de fábrica.\n2. Clicar no botão correspondente da sua máquina ativa.\n3. Inicializar apontamento apontando leitor óptico para etiqueta da Ordem de Produção.',
-          layout: 'text-only'
-        },
-        {
-          id: 's-t4-' + Date.now(),
-          title: 'Estação Piloto e Layout de Referência',
-          subtitle: 'Visão da Fábrica Integrada com IoT',
-          freeText: 'Abaixo encontra-se a imagem da estação em pleno funcionamento. Utilize esse mapeamento de fluxo dinâmico para treinar equipes e solucionar desvios operacionais.',
-          imageUrl: 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&q=80',
-          layout: 'split-image'
-        },
-        {
-          id: 's-t5-' + Date.now(),
-          title: 'Checklist Final de Auditoria',
-          subtitle: 'Aprovação para início das operações',
-          freeText: 'Realize as seguintes validações antes de liberar o operador piloto.',
-          layout: 'bullets-only',
-          listItems: [
-            { id: 'b4-' + Date.now(), text: 'Operador realizou teste prático de registro com sucesso?' },
-            { id: 'b5-' + Date.now(), text: 'O supervisor de turno auditou e revisou os tempos padrão?' },
-            { id: 'b6-' + Date.now(), text: 'O dispositivo coletor de dados está higienizado e energizado?' }
-          ]
-        }
-      ];
+      preloadedSlides = generateSlidesForModule(selectedTemplateId, newTitle, newDesc, newCategory);
     } else {
       // Just 1 blank slide (will trigger the soft 5-page warning, instructing the user)
       preloadedSlides = [
@@ -132,7 +158,78 @@ export default function Dashboard({
     onAddPresentation(newPres);
     setNewTitle('');
     setNewDesc('');
+    setSelectedTemplateId('generic');
     setIsCreating(false);
+  };
+
+  const handleTemplateChange = (templateId: string) => {
+    setSelectedTemplateId(templateId);
+    if (templateId === 'generic') {
+      setNewTitle('');
+      setNewDesc('');
+      setNewCategory('Visão Geral');
+    } else {
+      const template = MODULE_TEMPLATES.find(t => t.id === templateId);
+      if (template) {
+        setNewTitle(template.name);
+        setNewDesc(template.sinopse);
+        setNewCategory(template.category);
+      }
+    }
+  };
+
+  const handleGenerateFromAudit = (mod: AuditedModule) => {
+    const existing = presentations.find(
+      p => p.title.toLowerCase() === mod.name.toLowerCase() || 
+           p.title.toLowerCase() === `treinamento: ${mod.name.toLowerCase()}`
+    );
+    if (existing) {
+      if (!confirm(`Já existe um circuito de treinamento gerado para "${mod.name}". Deseja prosseguir e criar outro circuito idêntico no painel?`)) {
+        return;
+      }
+    }
+
+    const generatedSlides = generateSlidesForModule(mod.id, mod.name, mod.sinopse, mod.category);
+    
+    // Adjust slide items list to conform to types (each list item needs an id)
+    const formattedSlides = generatedSlides.map((slide, idx) => {
+      // Ensure each list item is properly typed with id if it's currently a string or has been transformed
+      const listItems = slide.listItems?.map((item, lIdx) => ({
+        id: item.id || `audit-item-${mod.id}-${idx}-${lIdx}-${Date.now()}`,
+        text: item.text,
+        checked: item.checked || false
+      }));
+
+      return {
+        ...slide,
+        listItems
+      };
+    });
+
+    const newPres: Presentation = {
+      id: 'pres-audit-' + mod.id + '-' + Date.now(),
+      title: mod.name,
+      description: mod.sinopse,
+      category: mod.category,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      status: 'Publicado', // Instantly published as it meets official audit parameters!
+      slides: formattedSlides
+    };
+
+    onAddPresentation(newPres);
+
+    setSuccessToast({
+      message: `⚡ Circuito de Treinamento Oficial para "${mod.name}" gerado com sucesso!`,
+      moduleName: mod.name
+    });
+
+    // Auto-scroll to top to see it
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    setTimeout(() => {
+      setSuccessToast(null);
+    }, 5000);
   };
 
   const getStatusBadge = (status: Status) => {
@@ -147,7 +244,72 @@ export default function Dashboard({
   };
 
   return (
-    <div className="space-y-6" id="dashboard-core-view">
+    <div className={`space-y-6 ${theme.fontBody}`} id="dashboard-core-view">
+      
+      {/* BEAUTIFUL FLOATING TIMEOUT TOAST NOTIFICATION */}
+      {successToast && (
+        <div className="fixed top-6 right-6 z-50 max-w-sm w-full bg-[#12141a] border-l-4 border-yellow-400 p-4 rounded shadow-2xl skew-x-[-8deg] animate-slideIn">
+          <div className="flex items-start gap-3 skew-x-[8deg]">
+            <div className="bg-[#FAFF00]/10 p-1.5 rounded text-[#FAFF00]">
+              <Sparkles className="w-5 h-5 animate-pulse" />
+            </div>
+            <div className="flex-1 text-xs">
+              <h4 className="font-bold text-white font-mono uppercase tracking-wider">MÓDULO DE TREINAMENTO ATIVO</h4>
+              <p className="text-slate-350 mt-1 leading-normal font-sans">{successToast.message}</p>
+              <div className="mt-2 text-[10px] text-[#FAFF00] font-mono flex items-center gap-1">
+                <span>Clique em "EDITAR" para customizar os slides do treinamento.</span>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              onClick={() => setSuccessToast(null)}
+              className="text-slate-400 hover:text-white font-bold transition mr-1 font-mono hover:scale-110"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* THEME SELECTION CONTROL WIDGET */}
+      <div className={`p-4 ${theme.bgCard} ${theme.roundedCard} border ${theme.borderColor} flex flex-col md:flex-row items-center justify-between gap-4 ${theme.shadowGlow}`} id="theme-governess-selection">
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-lg ${theme.bgAccent} border ${theme.borderColor} flex items-center justify-center ${theme.textPrimaryAccent}`}>
+            <Cpu className="w-5 h-5 animate-pulse" />
+          </div>
+          <div>
+            <h3 className={`text-sm ${theme.fontDisplay} ${theme.textTitle} tracking-wide`}>Mecanismo de Temas do Cockpit</h3>
+            <p className={`text-[10px] ${theme.textMuted} font-mono uppercase mt-0.5`}>Tokens ativos de Design: Cores, Tipografias e Bordas no LocalStorage</p>
+          </div>
+        </div>
+        
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { id: 'racing', label: '🏁 Racing F1', desc: 'Amarelo & Carbono' },
+            { id: 'industrial', label: '🏗️ Industrial Amber', desc: 'Laranja & Listras' },
+            { id: 'minimalist', label: '🔲 Minimalista', desc: 'Monocromático Limpo' }
+          ].map((opt) => {
+            const active = currentThemeStyle === opt.id;
+            return (
+              <button
+                key={opt.id}
+                onClick={() => onThemeStyleChange(opt.id as any)}
+                className={`relative overflow-hidden px-4 py-1.5 ${theme.fontMono} text-xs font-bold transition-all duration-200 cursor-pointer ${theme.skewAngle ? theme.skewAngle : ''} ${
+                  active 
+                    ? `${theme.btnPrimaryBg} ${theme.btnPrimaryText} ${theme.shadowGlow} border ${theme.borderColor}`
+                    : `bg-slate-900/40 hover:bg-slate-800 text-slate-400 border ${theme.borderColor}`
+                }`}
+                style={{ borderRadius: active ? '4px' : '6px' }}
+              >
+                <span className={`inline-block ${theme.unskewAngle ? theme.unskewAngle : ''} text-center`}>
+                  {opt.label.toUpperCase()}
+                  <span className="block text-[8px] opacity-75 font-mono font-normal normal-case">{opt.desc}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
       
       {/* KEY STATS BAR */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 select-none" id="stats-dashboard-grid">
@@ -195,17 +357,17 @@ export default function Dashboard({
       </div>
 
       {/* DASHBOARD ACTIONS HEADER */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#121214] p-5 rounded border border-[#262A35] shadow-[0_0_30px_rgba(250,255,0,0.02)]">
+      <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${theme.bgCard} p-5 ${theme.roundedCard} border ${theme.borderColor} ${theme.shadowGlow}`}>
         <div>
-          <span className="text-[10px] font-bold font-mono text-[#FAFF00] uppercase tracking-widest block">PAINEL DE COMANDO TELEMÉTRICO</span>
-          <h2 className="text-2xl font-display italic font-black text-white mt-1 uppercase tracking-tight">GERENCIAMENTO DE CIRCUITOS</h2>
+          <span className={`text-[10px] font-bold font-mono ${theme.textSubtitle} uppercase tracking-widest block`}>PAINEL DE COMANDO TELEMÉTRICO</span>
+          <h2 className={`text-2xl ${theme.fontDisplay} ${theme.textTitle} mt-1 uppercase tracking-tight`}>GERENCIAMENTO DE CIRCUITOS</h2>
         </div>
         <button
           onClick={() => setIsCreating(true)}
-          className="relative overflow-hidden group flex items-center gap-1.5 px-5 py-2.5 bg-[#FAFF00] hover:bg-[#E6EB00] text-black font-black italic text-xs rounded transition shadow-lg cursor-pointer skew-x-[-12deg]"
+          className={`relative overflow-hidden group flex items-center gap-1.5 px-5 py-2.5 ${theme.btnPrimaryBg} ${theme.btnPrimaryHover} ${theme.btnPrimaryText} ${theme.fontMono} text-xs rounded transition shadow-lg cursor-pointer ${theme.skewAngle ? theme.skewAngle : ''}`}
           id="btn-trigger-new-presentation"
         >
-          <span className="inline-block skew-x-[12deg] flex items-center gap-1.5 font-mono">
+          <span className={`inline-block ${theme.unskewAngle ? theme.unskewAngle : ''} flex items-center gap-1.5`}>
             <Plus className="w-4 h-4 stroke-[3]" />
             NOVO TREINAMENTO
           </span>
@@ -376,6 +538,257 @@ export default function Dashboard({
         </div>
       )}
 
+      {/* INDUSTRIAL OS COMPREHENSIVE TRAINING AUDIT & SEED PANEL */}
+      <div className={`mt-10 ${theme.bgCard} ${theme.roundedCard} border ${theme.borderColor} overflow-hidden ${theme.shadowGlow}`} id="training-audit-comprehensive-panel">
+        
+        {/* Panel Collapsible Header */}
+        <div 
+          onClick={() => setIsAuditExpanded(!isAuditExpanded)}
+          className={`p-5 flex items-center justify-between cursor-pointer border-b ${theme.borderColor} hover:bg-slate-900/25 transition-colors select-none`}
+        >
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded ${theme.bgAccent} border ${theme.borderAccent || theme.borderColor} flex items-center justify-center ${theme.textPrimaryAccent}`}>
+              <Award className="w-4 h-4 text-yellow-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-bold font-mono ${theme.textSubtitle} uppercase tracking-widest block`}>MATRIZ DE CAPACITAÇÃO INDUSTRIAL OS (CONFORME AUDITORIA)</span>
+                <span className="bg-[#FAFF00]/10 text-[#FAFF00] border border-[#FAFF00]/25 text-[8.5px] px-1.5 py-0.5 rounded font-mono font-bold animate-pulse">23 TEMAS RECOMENDADOS</span>
+              </div>
+              <h2 className={`text-xl ${theme.fontDisplay} ${theme.textTitle} font-bold mt-1 uppercase tracking-tight`}>
+                Diagnóstico e Geração Instantânea de Circuitos
+              </h2>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="hidden sm:flex flex-col items-end text-right font-mono">
+              <span className="text-[10px] text-slate-500">COBERTURA DA PLANTA</span>
+              <span className={`text-xs font-bold ${coveragePercent > 50 ? 'text-emerald-400' : 'text-yellow-500'}`}>
+                {activeModulesCount} / 23 ({coveragePercent}%) ATIVOS
+              </span>
+            </div>
+            <button className="p-1.5 hover:bg-slate-800/40 rounded transition">
+              {isAuditExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Panel Core Content */}
+        {isAuditExpanded && (
+          <div className="p-6 space-y-6 animate-fadeIn select-none">
+            
+            {/* AUDIT COGNITIVE INTRO & ACCORDION KPIs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1">
+                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Taxa de Implantação</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-display font-black text-white">{activeModulesCount}</span>
+                  <span className="text-xs text-slate-500 font-mono">módulos gerados</span>
+                </div>
+                {/* Micro slider rating */}
+                <div className="w-full bg-slate-850 h-1.5 rounded-full overflow-hidden mt-2">
+                  <div className="bg-gradient-to-r from-yellow-500 to-emerald-400 h-full transition-all" style={{ width: `${coveragePercent}%` }} />
+                </div>
+              </div>
+
+              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1">
+                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Fase Atual Recomendada</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-display font-black text-yellow-400">FASE 1</span>
+                  <span className="text-xs text-slate-500 font-mono font-sans">Alta Prioridade</span>
+                </div>
+                <p className="text-[9px] text-slate-500 font-sans mt-1.5 leading-snug">
+                  Módulos fundamentais comerciais e cadastros iniciais de chão.
+                </p>
+              </div>
+
+              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1 block">
+                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Média de Laps Auditados</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-display font-black text-white">7.2</span>
+                  <span className="text-xs text-slate-500 font-mono">slides/módulo</span>
+                </div>
+                <p className="text-[9px] text-slate-500 font-sans mt-1.5 leading-snug">
+                  Estruturação otimizada para evitar exaustão cognitiva no operador.
+                </p>
+              </div>
+
+              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1">
+                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Maturidade do Sistema</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-display font-black text-emerald-400">Excelente</span>
+                  <span className="text-xs text-slate-500 font-mono font-sans">23 módulos</span>
+                </div>
+                <p className="text-[9px] text-slate-500 font-sans mt-1.5 leading-snug">
+                  Matriz completa cobrando engenharia, produção e qualidade.
+                </p>
+              </div>
+            </div>
+
+            {/* AUDIT FILTER BAR & RESEARCH */}
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-t border-[#1E293B] pt-5">
+              
+              {/* Phases selectors */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 lg:pb-0 scrollbar-none">
+                {[
+                  { id: 'Todos', label: 'Todos os Módulos' },
+                  { id: 'Fase 1', label: 'Fase 1: Primeiro Lote' },
+                  { id: 'Fase 2', label: 'Fase 2: Estabilização' },
+                  { id: 'Fase 3', label: 'Fase 3: Crescimento' },
+                  { id: 'Fase 4', label: 'Fase 4: Consolidado' }
+                ].map((ph) => {
+                  const active = auditFilterPhase === ph.id;
+                  return (
+                    <button
+                      key={ph.id}
+                      onClick={() => setAuditFilterPhase(ph.id)}
+                      className={`px-3 py-1 text-[10.5px] font-mono font-bold tracking-wide transition border cursor-pointer shrink-0 skew-x-[-12deg] ${
+                        active 
+                          ? 'bg-yellow-400/15 text-yellow-400 border-yellow-400/30 shadow-sm'
+                          : 'bg-transparent text-slate-400 border-[#1E293B] hover:bg-slate-900/30'
+                      }`}
+                    >
+                      <span className="inline-block skew-x-[12deg] uppercase">{ph.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Research Input */}
+              <div className="relative w-full lg:max-w-xs shrink-0 bg-[#0A0D14] border border-[#1E293B] rounded">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  placeholder="Pesquisar na auditoria..."
+                  value={auditSearchTerm}
+                  onChange={(e) => setAuditSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-yellow-400/30"
+                />
+              </div>
+            </div>
+
+            {/* AUDITED MODULES DYNAMIC LIST / CARDS GRID */}
+            {activeAuditedModules.length === 0 ? (
+              <div className="text-center py-10 bg-[#0A0D14] rounded-lg border border-dashed border-[#1E293B]">
+                <p className="text-slate-400 text-xs">Nenhum tema encontrado na auditoria de treinamentos para esta seleção.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {activeAuditedModules.map((mod) => {
+                  const hasMatchingPresentation = presentations.some(p => 
+                    p.title.toLowerCase() === mod.name.toLowerCase() || 
+                    p.title.toLowerCase() === `treinamento: ${mod.name.toLowerCase()}`
+                  );
+                  
+                  // Color indicators for complexity badges
+                  const complexityColors = {
+                    'Muito Simples': 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30',
+                    'Simples': 'bg-teal-950/40 text-teal-400 border-teal-900/30',
+                    'Médio': 'bg-blue-950/40 text-blue-400 border-blue-900/30',
+                    'Complexo': 'bg-amber-950/40 text-amber-500 border-amber-900/30',
+                    'Muito Complexo': 'bg-red-950/40 text-red-500 border-red-900/30'
+                  };
+
+                  return (
+                    <div 
+                      key={mod.id} 
+                      className={`relative bg-[#0A0D14]/80 p-5 rounded-lg border transition-all duration-300 flex flex-col justify-between hover:bg-[#0E121C] group ${
+                        hasMatchingPresentation 
+                          ? 'border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.02)]' 
+                          : 'border-[#1E293B] hover:border-yellow-500/30'
+                      }`}
+                    >
+                      {/* Status indicator ribbon top-right */}
+                      {hasMatchingPresentation && (
+                        <div className="absolute top-3 right-4 flex items-center gap-1 text-[8.5px] font-bold font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-900/30 uppercase">
+                          <CheckCircle2 className="w-2.5 h-2.5 stroke-[3]" /> GERADO
+                        </div>
+                      )}
+
+                      <div className="space-y-3">
+                        {/* Categorization headers */}
+                        <div className="flex flex-wrap items-center gap-1.5 select-none shrink-0">
+                          <span className="text-[8px] font-bold font-mono tracking-wider text-slate-500 uppercase">
+                            {mod.category}
+                          </span>
+                          <span className={`text-[8px] font-bold font-mono px-1.5 py-0.5 rounded border ${
+                            mod.phase === 'Fase 1' 
+                              ? 'bg-red-950/30 text-red-400 border-red-900/20' 
+                              : mod.phase === 'Fase 2' 
+                                ? 'bg-amber-950/30 text-amber-400 border-amber-900/20' 
+                                : mod.phase === 'Fase 3'
+                                  ? 'bg-blue-950/30 text-blue-400 border-blue-900/20'
+                                  : 'bg-purple-950/30 text-purple-400 border-purple-900/20'
+                          }`}>
+                            {mod.phase.toUpperCase()}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h3 className="font-display italic font-black text-sm text-white group-hover:text-yellow-400 transition-colors uppercase">
+                            {mod.name}
+                          </h3>
+                          <p className="text-[11px] text-slate-400 mt-1 lines-clamp-3 leading-relaxed">
+                            {mod.sinopse}
+                          </p>
+                        </div>
+
+                        {/* Audit Details Grid */}
+                        <div className="grid grid-cols-2 gap-2 text-[9px] font-mono border-t border-[#1C1F26] pt-3 text-slate-500">
+                          <div>
+                            <span className="block text-slate-600">COMPLEXIDADE:</span>
+                            <span className={`inline-block font-bold text-[8.5px] px-1 py-0.2 rounded border uppercase mt-0.5 ${complexityColors[mod.complexity as keyof typeof complexityColors]}`}>
+                              {mod.complexity}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="block text-slate-600">TAMANHO IDEAL:</span>
+                            <span className="font-bold text-slate-350">{mod.slidesCount} LAPS (SLIDES)</span>
+                          </div>
+                          <div>
+                            <span className="block text-slate-600">FORMATO DIRECIONADO:</span>
+                            <span className="font-semibold text-slate-350 truncate block" title={mod.format}>{mod.format}</span>
+                          </div>
+                          <div>
+                            <span className="block text-slate-600">VALOR OPERACIONAL:</span>
+                            <span className={`font-bold ${mod.businessValue === 'Muito Alto' ? 'text-emerald-400' : 'text-slate-300'}`}>{mod.businessValue.toUpperCase()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Instant seed button trigger */}
+                      <div className="mt-5 select-none pt-3 border-t border-[#1C1F26]">
+                        <button
+                          onClick={() => handleGenerateFromAudit(mod)}
+                          className={`w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black italic rounded transition cursor-pointer font-mono skew-x-[-12deg] ${
+                            hasMatchingPresentation 
+                              ? 'bg-[#1C1F26] hover:bg-emerald-950/30 text-slate-350 hover:text-emerald-400 hover:border hover:border-emerald-500/20'
+                              : 'bg-yellow-400 hover:bg-yellow-350 text-black shadow-md shadow-yellow-950/10'
+                          }`}
+                        >
+                          <span className="inline-block skew-x-[12deg] flex items-center gap-1">
+                            <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
+                            {hasMatchingPresentation ? 'RE-GERAR CIRCUITO' : '⚡ AUTO-GERAR CIRCUITO'}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            
+            <div className="text-[10px] font-mono text-slate-500 flex items-center gap-1.5 select-none border-t border-[#1E293B] pt-4">
+              <Info className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span>
+                Cada circuito gerado automaticamente já contém um roteiro de 5 a 8 slides estruturados em estrita conformidade com os dados reais de auditoria do Industrial OS.
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* POPUP: ADD NEW PRESENTATION MODAL */}
       {isCreating && (
         <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-[#0A0C10]/80 backdrop-blur-xs select-none animate-fadeIn">
@@ -396,6 +809,25 @@ export default function Dashboard({
             </div>
 
             <div className="space-y-4 text-xs">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase font-mono tracking-wider mb-1">PROCESSO DA FÁBRICA (OPCIONAL TEMPLATE)</label>
+                <select
+                  value={selectedTemplateId}
+                  onChange={(e) => handleTemplateChange(e.target.value)}
+                  className="w-full px-2.5 py-2.5 border border-[#1E293B] bg-[#16191E] text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer font-sans"
+                >
+                  <option value="generic" className="bg-[#16191E] text-white">✍️ Criar Treinamento Personalizado (Sem módulo pré-definido)</option>
+                  {MODULE_TEMPLATES.map((tmpl) => (
+                    <option key={tmpl.id} value={tmpl.id} className="bg-[#16191E] text-white">
+                      ⚙️ {tmpl.name} ({tmpl.category})
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1 font-mono">
+                  Selecione um processo operacional para que a IA crie instantaneamente um plano oficial auditável de 8 slides focado na fábrica real.
+                </p>
+              </div>
+
               <div>
                 <label className="block text-xs font-semibold text-slate-400 uppercase font-mono tracking-wider mb-1">Título do Treinamento</label>
                 <input
@@ -448,18 +880,18 @@ export default function Dashboard({
               </div>
 
               {/* Template generator checkbox */}
-              <div className="p-3.5 bg-blue-950/20 border border-blue-900/30 rounded-lg space-y-1.5">
+              <div className="p-3.5 bg-yellow-950/20 border border-yellow-900/30 rounded-lg space-y-1.5">
                 <label className="flex items-start gap-2.5 font-bold text-slate-300 cursor-pointer text-xs">
                   <input
                     type="checkbox"
                     checked={preloadTemplate}
                     onChange={(e) => setPreloadTemplate(e.target.checked)}
-                    className="accent-blue-500 mt-0.5 cursor-pointer"
+                    className="accent-yellow-500 mt-0.5 cursor-pointer"
                   />
-                  <span>Pré-carregar Estrutura Recomendada</span>
+                  <span>Pré-carregar Estrutura Mestra Pronta</span>
                 </label>
-                <p className="text-[10.5px] text-slate-450 leading-relaxed pl-5">
-                  Recomendado. Cria automaticamente a apresentação pré-populada com **5 slides estruturados padrão** (Capa, Objetivos, Roteiro, Exemplo Mídia, Checklist) para estar imediatamente em conformidade com as exigências da fábrica.
+                <p className="text-[10.5px] text-slate-450 leading-relaxed pl-5 font-mono">
+                  Altamente Recomendado. Estrutura de **8 slides em total conformidade** com os critérios da fábrica, ensinando primeiro a operação física real, o problema resolvido, como o Industrial OS ajuda, onde acessar, o passo a passo de cliques, simulações e o checklist de sucesso.
                 </p>
               </div>
             </div>

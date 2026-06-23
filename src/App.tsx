@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Presentation, MediaAsset, Category } from './types';
+import { Presentation, MediaAsset, Category, ThemeStyle } from './types';
 import { INITIAL_PRESENTATIONS, INITIAL_MEDIA_LIBRARY } from './mockData';
 import Dashboard from './components/Dashboard';
 import PresentationEditor from './components/PresentationEditor';
 import PresenterMode from './components/PresenterMode';
 import MediaLibrary from './components/MediaLibrary';
 import ExportModal from './components/ExportModal';
+import { THEMES } from './lib/themeStyles';
 import { 
   Cpu, LayoutGrid, Image as ImageIcon, HelpCircle, 
   Settings2, Plus, Sparkles, BookOpen 
@@ -17,6 +18,57 @@ export default function App() {
   const [activeView, setActiveView] = useState<'dashboard' | 'editor' | 'presenter' | 'medialibrary'>('dashboard');
   const [selectedPresentationId, setSelectedPresentationId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+
+  const [globalThemeStyle, setGlobalThemeStyle] = useState<ThemeStyle>(() => {
+    const saved = localStorage.getItem('industrial_os_global_themeStyle');
+    return (saved as ThemeStyle) || 'racing';
+  });
+
+  const currentTheme = THEMES[globalThemeStyle] || THEMES.racing;
+
+  // Synchronize style and full Design Tokens bundle to LocalStorage
+  useEffect(() => {
+    localStorage.setItem('industrial_os_global_themeStyle', globalThemeStyle);
+    
+    // Store precise tokens of design (cores, tipografia, bordas)
+    const designTokens = {
+      colors: {
+        bgGlobal: currentTheme.bgGlobal,
+        bgCard: currentTheme.bgCard,
+        bgPanel: currentTheme.bgPanel,
+        bgAccent: currentTheme.bgAccent,
+        textTitle: currentTheme.textTitle,
+        textSubtitle: currentTheme.textSubtitle,
+        textBody: currentTheme.textBody,
+        textMuted: currentTheme.textMuted,
+        textPrimaryAccent: currentTheme.textPrimaryAccent,
+        btnPrimaryBg: currentTheme.btnPrimaryBg,
+        btnPrimaryText: currentTheme.btnPrimaryText,
+        btnSecondaryBg: currentTheme.btnSecondaryBg,
+        btnSecondaryText: currentTheme.btnSecondaryText,
+        borderColor: currentTheme.borderColor,
+        borderAccent: currentTheme.borderAccent,
+      },
+      typography: {
+        fontDisplay: currentTheme.fontDisplay,
+        fontBody: currentTheme.fontBody,
+        fontMono: currentTheme.fontMono,
+      },
+      borders: {
+        roundedSlide: currentTheme.roundedSlide,
+        roundedCard: currentTheme.roundedCard,
+        skewAngle: currentTheme.skewAngle,
+        unskewAngle: currentTheme.unskewAngle,
+      }
+    };
+    
+    localStorage.setItem('industrial_os_design_tokens', JSON.stringify(designTokens));
+
+    // Apply document-wide support custom properties
+    const root = document.documentElement;
+    root.style.setProperty('--bg-global', currentTheme.bgGlobal);
+    root.style.setProperty('--rounded-card', currentTheme.roundedCard);
+  }, [globalThemeStyle, currentTheme]);
 
   // Load initial content from LocalStorage or Fallback Mock Data
   useEffect(() => {
@@ -115,48 +167,51 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[#E2E8F0] font-sans flex flex-col bg-dots-pattern">
+    <div className={`min-h-screen ${currentTheme.bgGlobal} ${currentTheme.textBody} ${currentTheme.fontBody} flex flex-col transition-colors duration-300 relative`}>
+      {/* Dynamic Background Pattern Overlay */}
+      <div className={`absolute inset-0 ${currentTheme.cardPattern} ${currentTheme.opacityPattern} pointer-events-none`} />
+      
       {/* Upper Navigation Bar */}
-      <header className="bg-[#121214] text-white border-b border-[#262A35] no-print col-span-12" id="main-brand-navbar">
+      <header className={`relative z-10 ${currentTheme.bgCard} ${currentTheme.textBody} border-b ${currentTheme.borderColor} no-print col-span-12`} id="main-brand-navbar">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => setActiveView('dashboard')}>
-            <div className="w-3.5 h-3.5 bg-[#FAFF00] rounded-xs shadow-[0_0_12px_#FAFF00] shrink-0 font-extrabold text-[10px] skew-x-[-12deg]"></div>
+            <div className={`w-3.5 h-3.5 ${currentTheme.btnPrimaryBg} rounded-xs shadow-md shrink-0 font-extrabold text-[10px] ${currentTheme.skewAngle ? currentTheme.skewAngle : ''}`}></div>
             <div>
-              <h1 className="text-base font-display italic font-black tracking-tight flex items-center gap-2 text-white">
-                COCKPIT <span className="font-light opacity-60 italic text-sm text-[#FAFF00]">TR-1</span>
-                <span className="bg-[#FAFF00]/10 text-[#FAFF00] border border-[#FAFF00]/25 text-[9px] px-2 py-0.5 rounded font-mono font-medium skew-x-[-12deg]">
-                  <span className="inline-block skew-x-[12deg]">TELEMETRIA v3</span>
+              <h1 className={`text-base ${currentTheme.fontDisplay} tracking-tight flex items-center gap-2 ${currentTheme.textTitle}`}>
+                COCKPIT <span className={`font-light opacity-60 italic text-sm ${currentTheme.textSubtitle}`}>TR-1</span>
+                <span className={`${currentTheme.bgAccent} ${currentTheme.textSubtitle} border ${currentTheme.borderColor} text-[9px] px-2 py-0.5 rounded font-mono font-medium ${currentTheme.skewAngle ? currentTheme.skewAngle : ''}`}>
+                  <span className={`inline-block ${currentTheme.unskewAngle ? currentTheme.unskewAngle : ''}`}>TELEMETRIA v3</span>
                 </span>
               </h1>
-              <p className="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-0.5">MOTORSPORT HIGH-PERFORMANCE TRAINING PLATFORM</p>
+              <p className={`text-[9px] ${currentTheme.textMuted} font-mono tracking-widest uppercase mt-0.5`}>MOTORSPORT HIGH-PERFORMANCE TRAINING PLATFORM</p>
             </div>
           </div>
-
+ 
           {/* Navigation selectors */}
           <div className="flex items-center gap-2 text-xs font-semibold select-none">
             <button
               onClick={() => { setActiveView('dashboard'); setSelectedPresentationId(null); }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded transition-all border cursor-pointer skew-x-[-12deg] ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded transition-all border cursor-pointer ${currentTheme.skewAngle ? currentTheme.skewAngle : ''} ${
                 activeView === 'dashboard' || activeView === 'editor' || activeView === 'presenter'
-                  ? 'bg-[#FAFF00]/10 text-[#FAFF00] border-[#FAFF00]/25 font-bold shadow-md shadow-[#FAFF00]/5'
+                  ? `${currentTheme.bgAccent} ${currentTheme.textSubtitle} ${currentTheme.borderAccent || currentTheme.borderColor} font-bold shadow-md`
                   : 'text-slate-400 border-transparent hover:text-white hover:bg-slate-800/30'
               }`}
             >
-              <span className="inline-block skew-x-[12deg] flex items-center gap-1.5 font-mono">
-                <LayoutGrid className="w-3.5 h-3.5 text-[#FAFF00]" />
+              <span className={`inline-block ${currentTheme.unskewAngle ? currentTheme.unskewAngle : ''} flex items-center gap-1.5 font-mono`}>
+                <LayoutGrid className={`w-3.5 h-3.5 ${currentTheme.textPrimaryAccent}`} />
                 PAINEL CENTRAL
               </span>
             </button>
-
+ 
             <button
               onClick={() => { setActiveView('medialibrary'); setSelectedPresentationId(null); }}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded transition-all border cursor-pointer skew-x-[-12deg] ${
+              className={`flex items-center gap-2 px-3.5 py-2 rounded transition-all border cursor-pointer ${currentTheme.skewAngle ? currentTheme.skewAngle : ''} ${
                 activeView === 'medialibrary'
-                  ? 'bg-[#FAFF00]/10 text-[#FAFF00] border-[#FAFF00]/25 font-bold shadow-md shadow-[#FAFF00]/5'
+                  ? `${currentTheme.bgAccent} ${currentTheme.textSubtitle} ${currentTheme.borderAccent || currentTheme.borderColor} font-bold shadow-md`
                   : 'text-slate-400 border-transparent hover:text-white hover:bg-slate-800/30'
               }`}
             >
-              <span className="inline-block skew-x-[12deg] flex items-center gap-1.5 font-mono">
+              <span className={`inline-block ${currentTheme.unskewAngle ? currentTheme.unskewAngle : ''} flex items-center gap-1.5 font-mono`}>
                 <ImageIcon className="w-3.5 h-3.5" />
                 DADOS DE MÍDIA
               </span>
@@ -174,6 +229,9 @@ export default function App() {
             onDeletePresentation={handleDeletePresentation}
             onDuplicatePresentation={handleDuplicatePresentation}
             onAddPresentation={handleCreatePresentation}
+            currentThemeStyle={globalThemeStyle}
+            onThemeStyleChange={setGlobalThemeStyle}
+            theme={currentTheme}
           />
         )}
 

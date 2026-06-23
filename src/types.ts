@@ -55,7 +55,7 @@ export interface Slide {
 }
 
 export type ThemeColor = 'yellow' | 'green' | 'red' | 'cyan' | 'purple';
-export type ThemeStyle = 'racing' | 'industrial' | 'corporate' | 'modern' | 'dark' | 'light';
+export type ThemeStyle = 'racing' | 'industrial' | 'corporate' | 'modern' | 'dark' | 'light' | 'minimalist';
 
 export interface Presentation {
   id: string;
