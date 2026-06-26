@@ -7,6 +7,7 @@ import {
   AlertTriangle, Lightbulb, Focus, CheckSquare, Square, ChevronRight, Activity, 
   HelpCircle as QuestionIcon, Sparkles, BookOpen, Layers
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface PresenterModeProps {
   presentation: Presentation;
@@ -25,9 +26,35 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
   // Interactive checklist state map
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
+  // Slide transition direction and animation configuration
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
+
+  const slideVariants = {
+    enter: (dir: 'forward' | 'backward') => ({
+      x: dir === 'forward' ? 80 : -80,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir: 'forward' | 'backward') => ({
+      x: dir === 'forward' ? -80 : 80,
+      opacity: 0,
+    })
+  };
+
   // Slide dimensions state to enforce strict 16:9 aspect ratio inside the flexible viewport
   const [slideDimensions, setSlideDimensions] = useState({ width: 800, height: 450 });
   const containerRef = useRef<HTMLDivElement>(null);
+  const contentContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll content back to top on slide transitions
+  useEffect(() => {
+    if (contentContainerRef.current) {
+      contentContainerRef.current.scrollTop = 0;
+    }
+  }, [currentSlideIndex]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -202,21 +229,29 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
       const nextStep = currentStep + 1;
       setCurrentStep(nextStep);
       
-      // Auto-focus scroll transitions
+      // Auto-focus scroll transitions - strictly scroll within the local content container to avoid jumping the main window/iframe
       setTimeout(() => {
-        if (pointRefs.current[nextStep - 1]?.current) {
-          pointRefs.current[nextStep - 1].current?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest'
+        const element = pointRefs.current[nextStep - 1]?.current;
+        const container = contentContainerRef.current;
+        if (element && container) {
+          const containerRect = container.getBoundingClientRect();
+          const elemRect = element.getBoundingClientRect();
+          const relativeTop = elemRect.top - containerRect.top + container.scrollTop;
+          // Smoothly scroll the container to center or position the newly revealed item
+          container.scrollTo({
+            top: relativeTop - containerRect.height / 2 + elemRect.height / 2,
+            behavior: 'smooth'
           });
         }
       }, 60);
     } else if (currentSlideIndex < presentation.slides.length - 1) {
+      setDirection('forward');
       const nextSlideIndex = currentSlideIndex + 1;
       setCurrentSlideIndex(nextSlideIndex);
       setCurrentStep(1);
     } else {
       // Loop slide cycle
+      setDirection('forward');
       setCurrentSlideIndex(-1);
       setCurrentStep(1);
     }
@@ -226,6 +261,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
     if (currentStep > 1) {
       setCurrentStep(prev => prev - 1);
     } else if (currentSlideIndex > -1) {
+      setDirection('backward');
       const prevIdx = currentSlideIndex - 1;
       setCurrentSlideIndex(prevIdx);
       if (prevIdx >= 0) {
@@ -247,6 +283,11 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
   };
 
   const jumpToSlide = (idx: number) => {
+    if (idx > currentSlideIndex) {
+      setDirection('forward');
+    } else if (idx < currentSlideIndex) {
+      setDirection('backward');
+    }
     setCurrentSlideIndex(idx);
     setCurrentStep(1);
     setSidebarOpen(false);
@@ -403,7 +444,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
           }
           handleNext();
         }}
-        className="flex-1 min-h-0 w-full flex relative items-center justify-center py-2 md:py-4 cursor-pointer select-none relative z-10"
+        className="flex-1 min-h-0 w-full flex relative items-center justify-center py-2 md:py-4 cursor-pointer select-none relative z-10 overflow-hidden"
         title="Clique na tela para abrir o próximo tópico"
       >
         
@@ -469,14 +510,22 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
         )}
 
         {/* RENDER ACTIVE SLIDE WITH DESIGN SYSTEM LAYOUTS */}
-        {currentSlideIndex === -1 ? (
-          /* ========================================================== */
-          /* LAYOUT CAPA (COVER)                                        */
-          /* ========================================================== */
-          <div 
-            style={{ width: slideDimensions.width, height: slideDimensions.height }}
-            className={`${theme.bgCard} border ${theme.borderColor} p-4 md:p-6 rounded-2xl shadow-2xl hover:border-slate-800 transition duration-300 animate-fadeIn relative overflow-hidden flex flex-col justify-between`}
-          >
+        <AnimatePresence mode="wait" initial={false}>
+          {currentSlideIndex === -1 ? (
+            /* ========================================================== */
+            /* LAYOUT CAPA (COVER)                                        */
+            /* ========================================================== */
+            <motion.div 
+              key="cover"
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.35, ease: "easeInOut" }}
+              style={{ width: slideDimensions.width, height: slideDimensions.height }}
+              className={`${theme.bgCard} border ${theme.borderColor} p-4 md:p-6 rounded-2xl shadow-2xl hover:border-slate-800 transition duration-300 relative overflow-hidden flex flex-col justify-between`}
+            >
             {/* Scrollable Center Content area inside Slide bounds */}
             <div className="flex-grow min-h-0 overflow-y-auto w-full flex flex-col items-center justify-start py-2 pr-1 select-none">
               
@@ -550,12 +599,19 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
             >
               ⚡ PRESSIONE ESPAÇO OU CLIQUE NA TELA PARA INICIAR O COCKPIT ⚡
             </div>
-          </div>
+          </motion.div>
         ) : (
           /* ========================================================== */
           /* ACTIVE SLIDE VIEWER RENDER                                 */
           /* ========================================================== */
-          <div 
+          <motion.div 
+            key={`slide-${currentSlideIndex}`}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.35, ease: "easeInOut" }}
             style={{ width: slideDimensions.width, height: slideDimensions.height }}
             className={`flex flex-col justify-between ${theme.bgCard} border ${theme.borderColor} p-6 md:p-8 rounded-2xl shadow-xl relative overflow-hidden backdrop-blur-sm`}
           >
@@ -587,7 +643,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
             {/* ======================================================== */}
             
             {/* Scrollable Content Viewport container */}
-            <div className="flex-grow min-h-0 overflow-y-auto py-4 pr-1 w-full flex flex-col justify-center">
+            <div ref={contentContainerRef} className="flex-grow min-h-0 overflow-y-auto py-4 pr-1 w-full flex flex-col justify-start">
             
             {/* Layout Case: COVER - REDESIGNED BEAUTIFULLY WITH LARGE TEXTS */}
             {currentLayoutType === 'cover' && (
@@ -613,7 +669,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
             {currentLayoutType === 'content' && (
               <div className="md:col-span-12 space-y-6">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-100 text-sm md:text-lg lg:text-2xl leading-relaxed whitespace-pre-line bg-black/35 p-6 border border-white/5 rounded-xl tracking-wide font-medium font-sans">
+                  <p className="text-slate-100 text-base md:text-xl lg:text-2xl leading-relaxed whitespace-pre-line bg-black/35 p-6 border border-white/5 rounded-xl tracking-wider font-medium font-sans">
                     {activeSlide.freeText}
                   </p>
                 )}
@@ -639,7 +695,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               <div className={`grid grid-cols-1 ${activeSlide?.imageUrl || activeSlide?.videoUrl ? 'md:grid-cols-12' : 'md:grid-cols-1'} gap-6 md:col-span-12 w-full`}>
                 <div className={`${activeSlide?.imageUrl || activeSlide?.videoUrl ? 'md:col-span-7' : ''} space-y-5`}>
                   {activeSlide?.freeText && (
-                    <p className="text-slate-300 text-sm md:text-lg leading-relaxed whitespace-pre-line font-medium tracking-wide">
+                    <p className="text-slate-200 text-base md:text-xl leading-relaxed whitespace-pre-line font-medium tracking-wide">
                       {activeSlide.freeText}
                     </p>
                   )}
@@ -662,7 +718,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                               <span>{idx + 1}</span>
                             </div>
                             <div className="min-w-0 flex-grow pr-2">
-                              <p className="text-slate-100 leading-normal text-base md:text-lg lg:text-xl font-bold tracking-wide font-sans">{item.text}</p>
+                              <p className="text-slate-100 leading-normal text-lg md:text-xl lg:text-2xl font-bold tracking-wider font-sans">{item.text}</p>
                             </div>
                           </div>
                         );
@@ -697,7 +753,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
             {currentLayoutType === 'two-columns' && (
               <div className="md:col-span-12 space-y-5">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-300 text-sm md:text-lg leading-relaxed bg-black/10 p-4 rounded-xl tracking-wide font-medium">
+                  <p className="text-slate-200 text-base md:text-xl leading-relaxed bg-black/10 p-4 rounded-xl tracking-wide font-medium">
                     {activeSlide.freeText}
                   </p>
                 )}
@@ -717,9 +773,9 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                           </div>
                           <div className="space-y-2 relative z-10">
                             <span className="text-[10px] font-mono tracking-widest font-bold uppercase" style={{ color: activeAccentColor }}>
-                              INDICADOR INTEGRADO 0{idx + 1}
+                              TÓPICO CHAVE 0{idx + 1}
                             </span>
-                            <p className="text-slate-100 text-base md:text-lg lg:text-xl font-bold leading-relaxed pr-8 tracking-wide font-sans">
+                            <p className="text-slate-100 text-lg md:text-xl lg:text-2xl font-bold leading-relaxed pr-8 tracking-wider font-sans">
                               {item.text}
                             </p>
                           </div>
@@ -737,7 +793,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
             {currentLayoutType === 'checklist' && (
               <div className="md:col-span-12 space-y-5 no-screen-click">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-305 text-sm md:text-lg bg-black/25 p-4 border border-white/5 rounded-xl font-medium tracking-wide leading-relaxed">
+                  <p className="text-slate-200 text-base md:text-xl bg-black/25 p-4 border border-white/5 rounded-xl font-medium tracking-wide leading-relaxed">
                     {activeSlide.freeText}
                   </p>
                 )}
@@ -766,7 +822,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                         </div>
                         
                         <div className="flex-grow min-w-0">
-                          <p className={`text-base md:text-lg lg:text-xl font-bold tracking-wide font-sans ${isChecked ? 'line-through text-slate-400' : 'text-slate-100'}`}>
+                          <p className={`text-lg md:text-xl lg:text-2xl font-bold tracking-wider font-sans ${isChecked ? 'line-through text-slate-400' : 'text-slate-100'}`}>
                             {item.text}
                           </p>
                         </div>
@@ -811,7 +867,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
             {currentLayoutType === 'flow' && (
               <div className="md:col-span-12 space-y-5">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-300 text-sm md:text-lg italic text-center leading-relaxed font-semibold">
+                  <p className="text-slate-200 text-base md:text-xl font-bold text-center leading-relaxed tracking-wider">
                     {activeSlide.freeText}
                   </p>
                 )}
@@ -858,9 +914,9 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                               <span>0{nodeIdx + 1}</span>
                             </div>
 
-                            <p className="text-sm md:text-base font-extrabold text-white mb-1.5 line-clamp-1 truncate tracking-wider uppercase">{node.label}</p>
+                            <p className="text-base md:text-lg font-black text-white mb-1.5 tracking-widest uppercase">{node.label}</p>
                             {node.description && (
-                              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{node.description}</p>
+                              <p className="text-xs md:text-sm text-slate-300 leading-relaxed tracking-wide font-medium">{node.description}</p>
                             )}
                           </div>
                         );
@@ -929,8 +985,8 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               {activeSlide?.alertText && (
                 <div className={`p-4 rounded-xl border-l-4 bg-red-950/15 border-red-500 text-[#FF8585] flex items-start gap-3 animate-fadeIn`}>
                   <AlertTriangle className="w-5 h-5 text-red-400 shrink-0 mt-0.5 animate-pulse" />
-                  <div className="text-xs font-semibold">
-                    <span className="block font-bold text-red-400 uppercase tracking-widest text-[9px] mb-0.5">AVISO DE ALERTA DE SEGURANÇA</span>
+                  <div className="text-sm md:text-base font-semibold tracking-wide">
+                    <span className="block font-black text-red-400 uppercase tracking-widest text-[10px] md:text-xs mb-0.5">AVISO DE ALERTA DE SEGURANÇA</span>
                     <p>{activeSlide.alertText}</p>
                   </div>
                 </div>
@@ -940,8 +996,8 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               {activeSlide?.tipText && (
                 <div className={`p-4 rounded-xl border-l-4 bg-amber-500/10 border-amber-500 text-[#FCD34D] flex items-start gap-3 animate-fadeIn`}>
                   <Lightbulb className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="text-xs font-semibold">
-                    <span className="block font-bold text-amber-400 uppercase tracking-widest text-[9px] mb-0.5">DICA OPERACIONAL DE FIXAÇÃO</span>
+                  <div className="text-sm md:text-base font-semibold tracking-wide">
+                    <span className="block font-black text-amber-400 uppercase tracking-widest text-[10px] md:text-xs mb-0.5">DICA OPERACIONAL DE FIXAÇÃO</span>
                     <p>{activeSlide.tipText}</p>
                   </div>
                 </div>
@@ -951,8 +1007,8 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               {activeSlide?.highlightText && (
                 <div className={`p-4 rounded-xl border-l-4 bg-[#7C3AED]/10 border-purple-500 text-[#D8B4FE] flex items-start gap-3 animate-fadeIn`}>
                   <Focus className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-                  <div className="text-xs font-semibold">
-                    <span className="block font-bold text-purple-400 uppercase tracking-widest text-[9px] mb-0.5">FATOR DE IMPACTO ACENTUADO</span>
+                  <div className="text-sm md:text-base font-semibold tracking-wide">
+                    <span className="block font-black text-purple-400 uppercase tracking-widest text-[10px] md:text-xs mb-0.5">FATOR DE IMPACTO ACENTUADO</span>
                     <p>{activeSlide.highlightText}</p>
                   </div>
                 </div>
@@ -971,8 +1027,9 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                 </span>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </div>
 
       {/* Embedded Real-time Telemetry Dashboard Footer (Navigation) */}

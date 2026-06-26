@@ -82,9 +82,12 @@ export default function Dashboard({
   const [newStatus, setNewStatus] = useState<Status>('Rascunho');
   const [preloadTemplate, setPreloadTemplate] = useState<boolean>(true);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('generic');
+  const [desiredSlideCount, setDesiredSlideCount] = useState<number>(8);
 
   // Training Audit Section States
   const [successToast, setSuccessToast] = useState<{ message: string; moduleName: string } | null>(null);
+  const [generatingModule, setGeneratingModule] = useState<AuditedModule | null>(null);
+  const [auditSlideCount, setAuditSlideCount] = useState<number>(8);
 
   // Calculate high level KPI values
   const totalCount = presentations.length;
@@ -96,32 +99,36 @@ export default function Dashboard({
     ? new Date(Math.max(...presentations.map(p => new Date(p.updatedAt).getTime())))
     : null;
 
-  // 1. Find matching presentation for an audited module theme
+  // 1. Find matching presentation for an audited module theme - robust, loose matching for perfect coordination
   const getPresentationForModule = (mod: AuditedModule) => {
-    return presentations.find(p => 
-      p.id.toLowerCase().includes(`-audit-${mod.id.toLowerCase()}-`) ||
-      p.id.toLowerCase().includes(`-audit-${mod.id.toLowerCase()}`) ||
-      p.title.toLowerCase() === mod.name.toLowerCase() || 
-      p.title.toLowerCase() === `treinamento: ${mod.name.toLowerCase()}`
-    );
+    return presentations.find(p => {
+      const pid = p.id.toLowerCase();
+      const mid = mod.id.toLowerCase();
+      const pTitle = p.title.toLowerCase().trim();
+      const mName = mod.name.toLowerCase().trim();
+      
+      return pid.includes(`-audit-${mid}`) ||
+             pid.includes(`_audit_${mid}`) ||
+             pid === mid ||
+             pTitle === mName ||
+             pTitle === `treinamento: ${mName}` ||
+             pTitle === `treinamento de ${mName}` ||
+             pTitle.includes(mName) ||
+             mName.includes(pTitle);
+    });
   };
 
   // 2. Filter custom, user-created presentations that don't match any static audit theme
   const customPresentations = presentations.filter(p => {
-    return !AUDITED_MODULES.some(m => 
-      p.id.toLowerCase().includes(`-audit-${m.id.toLowerCase()}-`) ||
-      p.id.toLowerCase().includes(`-audit-${m.id.toLowerCase()}`) ||
-      p.title.toLowerCase() === m.name.toLowerCase() || 
-      p.title.toLowerCase() === `treinamento: ${m.name.toLowerCase()}`
-    );
+    return !AUDITED_MODULES.some(m => {
+      const matchedPres = getPresentationForModule(m);
+      return matchedPres?.id === p.id;
+    });
   });
 
-  const activeModulesCount = AUDITED_MODULES.filter(m => 
-    presentations.some(p => 
-      p.title.toLowerCase() === m.name.toLowerCase() || 
-      p.title.toLowerCase() === `treinamento: ${m.name.toLowerCase()}`
-    )
-  ).length;
+  const activeModulesCount = AUDITED_MODULES.filter(m => {
+    return !!getPresentationForModule(m);
+  }).length;
 
   const coveragePercent = Math.round((activeModulesCount / 23) * 100);
 
@@ -206,7 +213,7 @@ export default function Dashboard({
     let preloadedSlides: Slide[] = [];
 
     if (preloadTemplate) {
-      preloadedSlides = generateSlidesForModule(selectedTemplateId, newTitle, newDesc, newCategory);
+      preloadedSlides = generateSlidesForModule(selectedTemplateId, newTitle, newDesc, newCategory, desiredSlideCount);
     } else {
       preloadedSlides = [
         {
@@ -234,6 +241,7 @@ export default function Dashboard({
     setNewTitle('');
     setNewDesc('');
     setSelectedTemplateId('generic');
+    setDesiredSlideCount(8);
     setIsCreating(false);
   };
 
@@ -253,7 +261,7 @@ export default function Dashboard({
     }
   };
 
-  const handleGenerateFromAudit = (mod: AuditedModule) => {
+  const handleGenerateFromAudit = (mod: AuditedModule, count: number = 8) => {
     const existing = presentations.find(
       p => p.title.toLowerCase() === mod.name.toLowerCase() || 
            p.title.toLowerCase() === `treinamento: ${mod.name.toLowerCase()}`
@@ -264,7 +272,7 @@ export default function Dashboard({
       }
     }
 
-    const generatedSlides = generateSlidesForModule(mod.id, mod.name, mod.sinopse, mod.category);
+    const generatedSlides = generateSlidesForModule(mod.id, mod.name, mod.sinopse, mod.category, count);
     
     // Adjust slide items list to conform to types
     const formattedSlides = generatedSlides.map((slide, idx) => {
@@ -294,7 +302,7 @@ export default function Dashboard({
     onAddPresentation(newPres);
 
     setSuccessToast({
-      message: `⚡ Circuito de Treinamento Oficial para "${mod.name}" gerado com sucesso!`,
+      message: `⚡ Circuito de Treinamento Oficial para "${mod.name}" (${count} slides) gerado com sucesso!`,
       moduleName: mod.name
     });
 
@@ -724,8 +732,11 @@ export default function Dashboard({
                           <Copy className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => onDeletePresentation(pres.id)}
-                          className="p-1.5 text-red-450 hover:text-red-400 hover:bg-red-950/20 rounded transition cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeletePresentation(pres.id);
+                          }}
+                          className="p-1.5 text-red-500 hover:text-red-400 hover:bg-red-950/20 rounded transition cursor-pointer"
                           title="Deletar Módulo do Painel"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
@@ -746,7 +757,8 @@ export default function Dashboard({
                     <button
                       onClick={() => {
                         if (!isCustom && mod) {
-                          handleGenerateFromAudit(mod);
+                          setGeneratingModule(mod);
+                          setAuditSlideCount(8);
                         }
                       }}
                       className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-[10px] font-black italic rounded transition cursor-pointer font-mono bg-yellow-400 hover:bg-yellow-350 text-black shadow-md skew-x-[-12deg]"
@@ -854,8 +866,8 @@ export default function Dashboard({
                 </div>
               </div>
 
-              {/* Template generator checkbox */}
-              <div className="p-3.5 bg-yellow-950/20 border border-yellow-900/30 rounded-lg space-y-1.5">
+              {/* Template generator checkbox & Slide Count Selector */}
+              <div className="p-3.5 bg-yellow-950/20 border border-yellow-900/30 rounded-lg space-y-3">
                 <label className="flex items-start gap-2.5 font-bold text-slate-300 cursor-pointer text-xs">
                   <input
                     type="checkbox"
@@ -865,9 +877,61 @@ export default function Dashboard({
                   />
                   <span>Pré-carregar Estrutura Mestra Pronta</span>
                 </label>
-                <p className="text-[10.5px] text-slate-450 leading-relaxed pl-5 font-mono">
-                  Altamente Recomendado. Estrutura de **8 slides em total conformidade** com os critérios da fábrica, ensinando primeiro a operação física real, o problema resolvido, como o Industrial OS ajuda, onde acessar, o passo a passo de cliques, simulações e o checklist de sucesso.
-                </p>
+                
+                {preloadTemplate && (
+                  <div className="pl-5 space-y-2 border-l border-yellow-900/40 mt-1">
+                    <label className="block text-[11px] font-semibold text-slate-300 uppercase font-mono tracking-wider">
+                      Quantidade de Slides a Gerar:
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setDesiredSlideCount(prev => Math.max(1, prev - 1))}
+                        className="w-8 h-8 flex items-center justify-center bg-[#16191E] border border-[#1E293B] text-white rounded-lg hover:bg-slate-800 transition cursor-pointer font-bold font-mono text-xs"
+                      >
+                        -
+                      </button>
+                      <input
+                        type="number"
+                        min={1}
+                        value={desiredSlideCount}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setDesiredSlideCount(isNaN(val) || val < 1 ? 1 : val);
+                        }}
+                        className="w-16 h-8 text-center bg-[#16191E] border border-[#1E293B] text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold font-mono text-xs"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setDesiredSlideCount(prev => prev + 1)}
+                        className="w-8 h-8 flex items-center justify-center bg-[#16191E] border border-[#1E293B] text-white rounded-lg hover:bg-slate-800 transition cursor-pointer font-bold font-mono text-xs"
+                      >
+                        +
+                      </button>
+                      
+                      {/* Presets */}
+                      <div className="flex items-center gap-1 pl-2">
+                        {[5, 8, 12, 16].map(num => (
+                          <button
+                            key={num}
+                            type="button"
+                            onClick={() => setDesiredSlideCount(num)}
+                            className={`px-2 py-1 text-[10px] font-mono font-bold rounded transition cursor-pointer ${
+                              desiredSlideCount === num
+                                ? 'bg-yellow-500 text-black border border-yellow-500'
+                                : 'bg-slate-900 text-slate-400 border border-[#1E293B] hover:text-white'
+                            }`}
+                          >
+                            {num}P
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-slate-400 font-mono leading-relaxed">
+                      Defina qualquer quantidade de páginas para seu plano de treinamento. Caso exceda o padrão, slides estruturados adicionais de conformidade serão gerados dinamicamente.
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -887,6 +951,135 @@ export default function Dashboard({
               </button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* POPUP: CUSTOM AI GENERATOR WITH ANY PAGE COUNT FOR AUDITED MODULES */}
+      {generatingModule && (
+        <div className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-[#0A0C10]/80 backdrop-blur-xs select-none animate-fadeIn">
+          <div 
+            className="bg-[#0F1217] w-full max-w-md rounded-xl shadow-2xl border border-[#1E293B] overflow-hidden flex flex-col p-6 relative"
+          >
+            {/* Top decorative amber line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-500" />
+
+            <div className="flex justify-between items-center border-b border-[#1E293B] pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-yellow-500" />
+                <h3 className="font-bold text-white text-xs uppercase font-mono tracking-wider">
+                  Configuração de Geração IA
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setGeneratingModule(null)}
+                className="text-slate-400 hover:text-white font-bold transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <p className="text-[11px] text-slate-300 leading-relaxed font-sans mb-3">
+                  Você está prestes a gerar um circuito oficial de treinamento auditado para o processo real da colchoaria:
+                </p>
+                <div className="p-3 bg-[#16191E] border border-slate-800 rounded-lg">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="px-1.5 py-0.5 text-[8px] font-mono font-bold uppercase rounded bg-yellow-950 text-yellow-400 border border-yellow-900/30">
+                      {generatingModule.phase}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {generatingModule.category}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-bold text-white font-sans">
+                    {generatingModule.name}
+                  </h4>
+                  <p className="text-[10.5px] text-slate-400 mt-1.5 leading-relaxed italic">
+                    "{generatingModule.sinopse}"
+                  </p>
+                </div>
+              </div>
+
+              {/* Dynamic slide count control */}
+              <div className="p-3.5 bg-slate-900/40 border border-slate-800/80 rounded-lg space-y-2.5">
+                <label className="block text-[11px] font-extrabold text-slate-300 uppercase font-mono tracking-widest">
+                  Quantidade Desejada de Páginas (Sem restrições):
+                </label>
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAuditSlideCount(prev => Math.max(1, prev - 1))}
+                    className="w-8 h-8 flex items-center justify-center bg-[#16191E] border border-[#1E293B] text-white rounded-lg hover:bg-slate-800 transition cursor-pointer font-bold font-mono text-xs"
+                  >
+                    -
+                  </button>
+                  <input
+                    type="number"
+                    min={1}
+                    value={auditSlideCount}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      setAuditSlideCount(isNaN(val) || val < 1 ? 1 : val);
+                    }}
+                    className="w-16 h-8 text-center bg-[#16191E] border border-[#1E293B] text-white rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 font-bold font-mono text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAuditSlideCount(prev => prev + 1)}
+                    className="w-8 h-8 flex items-center justify-center bg-[#16191E] border border-[#1E293B] text-white rounded-lg hover:bg-slate-800 transition cursor-pointer font-bold font-mono text-xs"
+                  >
+                    +
+                  </button>
+
+                  {/* Quick Presets inside pop up */}
+                  <div className="flex items-center gap-1 pl-2">
+                    {[5, 8, 12, 16].map(num => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setAuditSlideCount(num)}
+                        className={`px-2 py-1 text-[10px] font-mono font-bold rounded transition cursor-pointer ${
+                          auditSlideCount === num
+                            ? 'bg-yellow-500 text-black border border-yellow-500'
+                            : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
+                        }`}
+                      >
+                        {num}P
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <p className="text-[10px] text-slate-400 font-mono leading-relaxed mt-1">
+                  💡 O gerador inteligente adaptará a ementa de conformidade do Industrial OS criando exatamente <span className="text-yellow-400 font-bold">{auditSlideCount} slides</span>, preenchendo-os com layouts adequados sem comprometer a instrução operacional.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-5 pt-4 border-t border-[#1E293B]">
+              <button
+                type="button"
+                onClick={() => setGeneratingModule(null)}
+                className="px-4 py-2 border border-[#1E293B] bg-[#16191E] text-slate-400 hover:text-white rounded-lg font-bold text-xs cursor-pointer transition uppercase font-mono"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleGenerateFromAudit(generatingModule, auditSlideCount);
+                  setGeneratingModule(null);
+                }}
+                className="px-5 py-2 bg-yellow-455 hover:bg-yellow-400 text-black font-black rounded-lg text-xs transition shadow-lg shadow-yellow-950/30 cursor-pointer uppercase font-mono flex items-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                Gerar {auditSlideCount} Slides
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

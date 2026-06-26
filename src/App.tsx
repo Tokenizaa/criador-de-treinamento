@@ -9,8 +9,9 @@ import ExportModal from './components/ExportModal';
 import { THEMES } from './lib/themeStyles';
 import { 
   Cpu, LayoutGrid, Image as ImageIcon, HelpCircle, 
-  Settings2, Plus, Sparkles, BookOpen 
+  Settings2, Plus, Sparkles, BookOpen, Trash2, AlertTriangle
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function App() {
   const [presentations, setPresentations] = useState<Presentation[]>([]);
@@ -18,6 +19,12 @@ export default function App() {
   const [activeView, setActiveView] = useState<'dashboard' | 'editor' | 'presenter' | 'medialibrary'>('dashboard');
   const [selectedPresentationId, setSelectedPresentationId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState<boolean>(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   const [globalThemeStyle, setGlobalThemeStyle] = useState<ThemeStyle>(() => {
     const saved = localStorage.getItem('industrial_os_global_themeStyle');
@@ -108,14 +115,20 @@ export default function App() {
   };
 
   const handleDeletePresentation = (id: string) => {
-    if (confirm('Tem certeza de que deseja excluir este módulo de apresentação de treinamento?')) {
-      const nextList = presentations.filter(p => p.id !== id);
-      savePresentationsToStorage(nextList);
-      if (selectedPresentationId === id) {
-        setSelectedPresentationId(null);
-        setActiveView('dashboard');
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Excluir Módulo de Treinamento',
+      message: 'Tem certeza de que deseja excluir permanentemente este módulo de apresentação de treinamento? Todos os slides e dados vinculados serão excluídos do cockpit.',
+      onConfirm: () => {
+        const nextList = presentations.filter(p => p.id !== id);
+        savePresentationsToStorage(nextList);
+        if (selectedPresentationId === id) {
+          setSelectedPresentationId(null);
+          setActiveView('dashboard');
+        }
+        setConfirmDialog(null);
       }
-    }
+    });
   };
 
   const handleDuplicatePresentation = (id: string) => {
@@ -149,10 +162,16 @@ export default function App() {
   };
 
   const handleDeleteMedia = (id: string) => {
-    if (confirm('Deseja excluir este item da biblioteca de mídias?')) {
-      const nextList = mediaList.filter(m => m.id !== id);
-      saveMediaToStorage(nextList);
-    }
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Excluir Item de Mídia',
+      message: 'Deseja excluir permanentemente este item da sua biblioteca de mídias?',
+      onConfirm: () => {
+        const nextList = mediaList.filter(m => m.id !== id);
+        saveMediaToStorage(nextList);
+        setConfirmDialog(null);
+      }
+    });
   };
 
   const activePresentation = presentations.find(p => p.id === selectedPresentationId) || null;
@@ -287,6 +306,53 @@ export default function App() {
           onClose={() => setIsExporting(false)}
         />
       )}
+
+      {/* CUSTOM CONFIRM DIALOG OVERLAY */}
+      <AnimatePresence>
+        {confirmDialog && confirmDialog.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs select-none">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className={`w-full max-w-md p-6 rounded-xl border ${currentTheme.borderColor} ${currentTheme.bgCard} shadow-2xl relative overflow-hidden`}
+            >
+              {/* Top aesthetic color bar */}
+              <div className="absolute top-0 left-0 right-0 h-1 bg-red-500" />
+              
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-red-950/40 rounded-lg border border-red-900/30 text-red-400 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className={`text-base font-bold ${currentTheme.textTitle} ${currentTheme.fontDisplay} tracking-tight uppercase`}>
+                    {confirmDialog.title}
+                  </h3>
+                  <p className={`text-xs ${currentTheme.textMuted} mt-2 font-mono leading-relaxed`}>
+                    {confirmDialog.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setConfirmDialog(null)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-850 text-slate-350 border border-slate-800 text-xs font-mono font-bold rounded-lg transition cursor-pointer"
+                >
+                  CANCELAR
+                </button>
+                <button
+                  onClick={confirmDialog.onConfirm}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-550 text-white text-xs font-mono font-bold rounded-lg transition cursor-pointer shadow-md shadow-red-950/20"
+                >
+                  CONFIRMAR EXCLUSÃO
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* PRINT-ONLY MASTER SLIDES OUTLINE DOCUMENT (Targeted by CSS media query print) */}
       {activePresentation && (

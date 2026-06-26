@@ -757,15 +757,21 @@ export const MODULE_TEMPLATES: ModuleTemplate[] = [
   }
 ];
 
-export function generateSlidesForModule(moduleId: string, customTitle?: string, customDesc?: string, category?: Category): Slide[] {
+export function generateSlidesForModule(
+  moduleId: string,
+  customTitle?: string,
+  customDesc?: string,
+  category?: Category,
+  desiredSlideCount: number = 8
+): Slide[] {
   const template = MODULE_TEMPLATES.find(t => t.id === moduleId);
+  let baseSlides: Slide[] = [];
+
   if (!template) {
-    // Return a beautiful generic 8-slide template following the master instruction
     const title = customTitle || 'Módulo Industrial OS';
-    const desc = customDesc || 'Treinamento de processo operacional integrado.';
     const cat = category || 'Cadastros';
 
-    return [
+    baseSlides = [
       {
         id: 's-g1-' + Date.now(),
         title: `TREINAMENTO: ${title.toUpperCase()}`,
@@ -849,25 +855,176 @@ export function generateSlidesForModule(moduleId: string, customTitle?: string, 
         ]
       }
     ];
+  } else {
+    baseSlides = template.slides.map((s, idx) => {
+      const listItems = s.listItems?.map((text, lIdx) => ({
+        id: `list-${idx}-${lIdx}-${Date.now()}`,
+        text,
+        checked: false
+      })) || undefined;
+
+      return {
+        id: `slide-${template.id}-${idx}-${Date.now()}`,
+        title: s.title,
+        subtitle: s.subtitle,
+        freeText: s.freeText,
+        layout: s.layout,
+        imageUrl: s.imageUrl,
+        iconName: s.iconName,
+        listItems
+      };
+    });
   }
 
-  // Map slide templates and convert to fully formed Slide objects
-  return template.slides.map((s, idx) => {
-    const listItems = s.listItems?.map((text, lIdx) => ({
-      id: `list-${idx}-${lIdx}-${Date.now()}`,
-      text,
-      checked: false
-    })) || undefined;
+  // Handle desired slide count
+  const L = baseSlides.length;
+  if (desiredSlideCount <= 0) desiredSlideCount = 1;
 
-    return {
-      id: `slide-${template.id}-${idx}-${Date.now()}`,
-      title: s.title,
-      subtitle: s.subtitle,
-      freeText: s.freeText,
-      layout: s.layout,
-      imageUrl: s.imageUrl,
-      iconName: s.iconName,
-      listItems
-    };
-  });
+  if (desiredSlideCount === L) {
+    return baseSlides;
+  }
+
+  if (desiredSlideCount < L) {
+    // Slice base slides, keeping introduction and conclusion (first & last)
+    if (desiredSlideCount === 1) {
+      return [baseSlides[0]];
+    }
+    const result: Slide[] = [];
+    result.push(baseSlides[0]); // Intro
+    
+    const numMiddleNeeded = desiredSlideCount - 2;
+    const middleSlidesPool = baseSlides.slice(1, L - 1);
+    
+    if (numMiddleNeeded > 0 && middleSlidesPool.length > 0) {
+      for (let i = 0; i < numMiddleNeeded; i++) {
+        const indexToPick = Math.floor((i * middleSlidesPool.length) / numMiddleNeeded);
+        result.push(middleSlidesPool[indexToPick]);
+      }
+    }
+    
+    result.push(baseSlides[L - 1]); // Outro
+    return result;
+  }
+
+  // desiredSlideCount > L: we need to expand slides!
+  const extraPool = [
+    {
+      title: 'ANÁLISE DE GARGALOS E PERDAS',
+      subtitle: 'Identificação rápida de desperdícios',
+      freeText: 'Todo desvio físico ou atraso no preenchimento do sistema gera perdas invisíveis na cadeia de produção. É crucial que a equipe saiba reportar gargalos para que a gestão possa atuar corretivamente com agilidade.',
+      layout: 'two-columns' as const,
+      iconName: 'TrendingUp',
+      listItems: [
+        { id: 'ex-b1-' + Date.now(), text: 'Paradas não programadas por falta de matéria-prima' },
+        { id: 'ex-b2-' + Date.now(), text: 'Descompasso de ritmo entre costura e embalagem' },
+        { id: 'ex-b3-' + Date.now(), text: 'Acúmulo excessivo de material semiacabado em corredor' }
+      ]
+    },
+    {
+      title: 'REGRAS DE OURO DE SEGURANÇA (EPI)',
+      subtitle: 'Preservando a integridade física na colchoaria',
+      freeText: 'A segurança do operador precede qualquer meta de produtividade. Antes de dar o primeiro clique em qualquer interface ou acionar qualquer esteira física, verifique as condições mínimas de trabalho.',
+      layout: 'checklist' as const,
+      iconName: 'AlertCircle',
+      listItems: [
+        { id: 'ex-ck1-' + Date.now(), text: 'Uso obrigatório de protetor auricular e óculos de proteção' },
+        { id: 'ex-ck2-' + Date.now(), text: 'Bloqueio de energia elétrica ativo para manutenção direta' },
+        { id: 'ex-ck3-' + Date.now(), text: 'Organização e limpeza de detritos no chão ao redor do posto' }
+      ]
+    },
+    {
+      title: 'FLUXO DE VALOR OPERACIONAL (VSM)',
+      subtitle: 'Sincronização entre material e dados digitais',
+      freeText: 'A precisão do sistema depende da pontualidade. Um registro feito duas horas atrasado é um dado inútil para a logística e gera atraso no fluxo final de expedição.',
+      layout: 'flow' as const,
+      iconName: 'Cpu',
+      flowNodes: [
+        { id: 'fn1-' + Date.now(), label: '1. Ordem Iniciada', description: 'O operador inicia a tarefa física no pavilhão' },
+        { id: 'fn2-' + Date.now(), label: '2. Apontamento Digital', description: 'Registro de consumo de matéria-prima em tempo real' },
+        { id: 'fn3-' + Date.now(), label: '3. Inspeção de Qualidade', description: 'Liberação final com registro do lote' }
+      ]
+    },
+    {
+      title: 'ORGANIZAÇÃO 5S NO POSTO DE TRABALHO',
+      subtitle: 'Ambiente limpo, seguro e produtivo',
+      freeText: 'A desorganização de ferramentas físicas induz a erros operacionais e acidentes. Mantenha os dispositivos de medição e insumos sempre em suas respectivas posições demarcadas.',
+      layout: 'step-by-step' as const,
+      iconName: 'Settings2',
+      listItems: [
+        { id: 'ex-s1-' + Date.now(), text: 'Seiri: Descarte o que não for mais útil para esta OP' },
+        { id: 'ex-s2-' + Date.now(), text: 'Seiton: Ordene as ferramentas em seus devidos ganchos' },
+        { id: 'ex-s3-' + Date.now(), text: 'Seiso: Limpe qualquer resíduo de espuma ou cola da bancada' },
+        { id: 'ex-s4-' + Date.now(), text: 'Seiketsu: Padronize as boas práticas entre os turnos' }
+      ]
+    },
+    {
+      title: 'ANÁLISE DE CAUSA RAIZ (5 PORQUÊS)',
+      subtitle: 'Buscando a origem dos desvios operacionais',
+      freeText: 'Sempre que houver uma falha ou refugo de material, pergunte o motivo de forma sucessiva. O objetivo do Industrial OS não é apontar culpados, mas ajustar o processo para eliminar vulnerabilidades de forma consistente.',
+      layout: 'text-only' as const,
+      iconName: 'HelpCircle'
+    },
+    {
+      title: 'INDICADORES CHAVE DE DESEMPENHO (KPIS)',
+      subtitle: 'O que o supervisor acompanha no visor central',
+      freeText: 'Suas atividades no pavilhão de produção refletem nos painéis de controle da diretoria em tempo real. Os principais pilares de medição são a Disponibilidade das máquinas, o Desempenho do ritmo e a Qualidade de aprovação.',
+      layout: 'two-columns' as const,
+      iconName: 'TrendingUp',
+      listItems: [
+        { id: 'ex-kpi1-' + Date.now(), text: 'Disponibilidade de equipamentos e tempo de parada' },
+        { id: 'ex-kpi2-' + Date.now(), text: 'Rendimento operacional versus ritmo teórico' },
+        { id: 'ex-kpi3-' + Date.now(), text: 'Taxa de aprovação de primeira (First Time Quality)' }
+      ]
+    },
+    {
+      title: 'RECOMENDAÇÕES PREDITIVAS DO COPILOT',
+      subtitle: 'Inteligência Industrial a favor do operador',
+      freeText: 'O Copilot analisa o histórico de produção e sugere ajustes automáticos nos estoques e tempos de setup. No entanto, lembre-se: a IA depende 100% da precisão dos seus registros para gerar previsões de atrasos e recomendações corretivas válidas.',
+      layout: 'text-only' as const,
+      iconName: 'Cpu'
+    },
+    {
+      title: 'PLANO DE CONTINGÊNCIA DA ÁREA',
+      subtitle: 'Manutenção do fluxo em caso de indisponibilidade',
+      freeText: 'Se o visor apresentar alguma falha ou a rede de dados estiver temporariamente indisponível, registre os tempos e consumos no boleto físico auxiliar. Assim que normalizar, atualize o sistema retroativamente.',
+      layout: 'text-only' as const,
+      iconName: 'AlertCircle'
+    }
+  ];
+
+  const result = [...baseSlides];
+  const lastSlide = result.pop()!; // Temporarily remove conclusion to insert extras before it
+
+  const numExtrasNeeded = desiredSlideCount - L;
+  for (let i = 0; i < numExtrasNeeded; i++) {
+    const poolIndex = i % extraPool.length;
+    const poolSlide = extraPool[poolIndex];
+    
+    // Generate a fresh instance with unique IDs
+    const listItems = poolSlide.listItems?.map((li, lIdx) => ({
+      id: `ext-li-${i}-${lIdx}-${Date.now()}`,
+      text: li.text,
+      checked: false
+    }));
+
+    const flowNodes = poolSlide.flowNodes?.map((fn, fIdx) => ({
+      id: `ext-fn-${i}-${fIdx}-${Date.now()}`,
+      label: fn.label,
+      description: fn.description
+    }));
+
+    result.push({
+      id: `ext-slide-${i}-${Date.now()}`,
+      title: poolSlide.title,
+      subtitle: `${poolSlide.subtitle} (Parte ${Math.floor(i / extraPool.length) + 1})`,
+      freeText: poolSlide.freeText,
+      layout: poolSlide.layout,
+      iconName: poolSlide.iconName,
+      listItems,
+      flowNodes
+    });
+  }
+
+  result.push(lastSlide); // Put conclusion back
+  return result;
 }

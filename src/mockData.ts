@@ -243,7 +243,7 @@ export const INITIAL_PRESENTATIONS: Presentation[] = [
         id: 'slide-2-1',
         title: 'Modelando sua Fábrica',
         subtitle: 'Gêmeo Digital de Produção',
-        freeText: 'A primeira fase da implantação envolve mapear as entidades físicas reais para as correspondentes lógicas dentro do Industrial OS. Isso garante que os cálculos de capacidade operem adequadamente.',
+        freeText: 'A primeira fase da implantação involves mapear as entidades físicas reais para as correspondentes lógicas dentro do Industrial OS. Isso garante que os cálculos de capacidade operem adequadamente.',
         imageUrl: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
         iconName: 'Database',
         layout: 'split-image'
@@ -369,855 +369,738 @@ export const INITIAL_PRESENTATIONS: Presentation[] = [
     updatedAt: '2026-06-26T10:00:00Z',
     status: 'Rascunho',
     themeColor: 'cyan',
+    themeStyle: 'industrial',
     slides: [
       {
         id: 'slide-4-1',
-        title: 'Fundamentos do Chão de Fábrica para o Industrial OS',
-        subtitle: 'Treinamento completo em 22 módulos',
-        freeText: 'Este treinamento ensina os fundamentos da Engenharia de Produção aplicados a uma fábrica de colchões. O objetivo é fazer você compreender como uma fábrica funciona e como cada informação cadastrada influencia os processos produtivos, indicadores e análises realizadas pelo Copilot.',
-        iconName: 'Presentation',
-        layout: 'hero'
+        title: 'Industrial OS: Gestão do Chão de Fábrica',
+        subtitle: 'Treinamento Completo de Fundamentos Industriais',
+        freeText: 'Seja bem-vindo ao cockpit de capacitação profissional. Este circuito prático de 22 módulos integra conceitos de Engenharia de Produção à realidade de uma fábrica de colchões, capacitando você a dominar o fluxo de informações, a inteligência industrial e o apoio do Copilot IA.\n\nFoco primeiro no processo físico, depois na ferramenta digital.',
+        iconName: 'Award',
+        layout: 'cover'
       },
       {
         id: 'slide-4-2',
-        title: 'Módulo 1: Conhecendo a Fábrica',
-        subtitle: 'Estrutura física de uma indústria',
-        freeText: 'Apresentar a estrutura física de uma indústria. Tudo começa pela estrutura física.',
+        title: 'Módulo 1: Estrutura Física',
+        subtitle: 'Empresa, Unidades, Galpões e Áreas',
+        freeText: 'Todo processo industrial exige um local físico. Na nossa modelagem, a Empresa jurídica possui Unidades físicas (fábricas). Cada unidade contém Galpões dedicados a processos específicos, que se dividem em Áreas operacionais como as Docas, Almoxarifados, áreas de Recebimento e Expedição.',
+        imageUrl: '/assets/implantacao.png',
         iconName: 'Building',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-2-1', text: 'Empresa - Organização que possui e opera a fábrica.' },
-          { id: '4-2-2', text: 'Unidade - Local físico onde a produção acontece (matriz ou filial).' },
-          { id: '4-2-3', text: 'Galpões - Áreas de produção e armazenamento.' },
-          { id: '4-2-4', text: 'Escritórios - Áreas administrativas e gestão.' }
-        ]
-      },
-      {
-        id: 'slide-4-2b',
-        title: 'Módulo 1: Conhecendo a Fábrica',
-        subtitle: 'Áreas operacionais',
-        freeText: 'As áreas operacionais definem os fluxos de materiais e produtos.',
-        iconName: 'LayoutGrid',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-2-5', text: 'Docas - Áreas de recebimento e expedição.' },
-          { id: '4-2-6', text: 'Almoxarifados - Armazenamento de materiais e ferramentas.' },
-          { id: '4-2-7', text: 'Recebimento - Entrada de matérias-primas.' },
-          { id: '4-2-8', text: 'Expedição - Saída de produtos acabados.' }
-        ]
+        layout: 'content',
+        tipText: 'Exemplo Prático: A "Colchões Sonho Ltda" opera com 3 galpões: Galpão A (corte/costura), Galpão B (montagem) e Galpão C (expedição). O almoxarifado fica anexo ao recebimento.',
+        alertText: 'Erro Comum: Cadastrar unidades antes da empresa ou omitir galpões físicos.',
+        moduleDetails: {
+          objetivo: 'Apresentar a estrutura física de uma indústria de colchões.',
+          conceitos: 'Empresa jurídica que detém a fábrica; Unidades fabris físicas; Galpões dedicados a processos específicos (corte, costura, etc.); Áreas internas como Docas de carga/descarga e Almoxarifados de matéria-prima.',
+          fluxoText: 'EMPRESA → UNIDADE → GALPÕES → ÁREAS (Recebimento → Estoque → Produção → Expedição)',
+          exemploPratico: 'A "Colchões Sonho Ltda" opera com 3 galpões principais de fabricação, mantendo o almoxarifado estratégico do lado das docas de recebimento.',
+          aplicacaoPlataforma: 'No Industrial OS, cadastre a Empresa, depois as Unidades físicas e os Galpões operacionais.',
+          errosComuns: 'Cadastrar unidades sem empresa correspondente ou pular o mapeamento de galpões físicos de produção.',
+          resumo: 'Tudo começa pelo desenho da estrutura física organizada em níveis hierárquicos Empresa → Unidade → Galpões → Áreas.',
+          quiz: [
+            {
+              question: 'Qual é a diferença entre Empresa e Unidade?',
+              options: ['Empresa é a pessoa jurídica; unidade é o local físico', 'Unidade é a jurídica; empresa é física', 'Não há diferença prática'],
+              correctIndex: 0,
+              explanation: 'A empresa representa o cadastro legal da organização, enquanto a unidade é a planta fabril física onde as operações acontecem.'
+            },
+            {
+              question: 'Onde ocorre o recebimento de matérias-primas?',
+              options: ['Na doca de expedição', 'No almoxarifado / recebimento de materiais', 'Diretamente nas máquinas de costura'],
+              correctIndex: 1,
+              explanation: 'Os insumos chegam pelo recebimento/doca de entrada e são armazenados e catalogados no almoxarifado.'
+            }
+          ],
+          exercicioPratico: 'Desenhe o layout das áreas físicas da sua fábrica ideal e liste os galpões existentes nela.'
+        }
       },
       {
         id: 'slide-4-3',
         title: 'Módulo 2: Layout Industrial',
-        subtitle: 'Fluxo físico da fábrica',
-        freeText: 'Uma fábrica possui um fluxo físico que influencia movimentação, produtividade, gargalos, perdas e rastreabilidade.',
-        iconName: 'ArrowRight',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-3-1', text: 'Recebimento - Matérias-primas chegam na fábrica.' },
-          { id: '4-3-2', text: 'Estoque - Materiais são armazenados até serem usados.' },
-          { id: '4-3-3', text: 'Corte - Materiais são cortados nas dimensões necessárias.' },
-          { id: '4-3-4', text: 'Montagem - Componentes são unidos para formar o produto.' }
-        ]
-      },
-      {
-        id: 'slide-4-3b',
-        title: 'Módulo 2: Layout Industrial',
-        subtitle: 'Fluxo físico continuado',
-        freeText: 'O fluxo continua pelas etapas de acabamento até a expedição.',
-        iconName: 'ArrowRight',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-3-5', text: 'Costura - Costura de tecidos e acabamentos.' },
-          { id: '4-3-6', text: 'Acabamento - Finalização e acabamento do produto.' },
-          { id: '4-3-7', text: 'Inspeção - Verificação de qualidade do produto.' },
-          { id: '4-3-8', text: 'Embalagem - Produto é protegido para transporte.' }
-        ]
-      },
-      {
-        id: 'slide-4-3c',
-        title: 'Módulo 2: Layout Industrial',
-        subtitle: 'Impacto do layout',
-        freeText: 'O layout influencia diretamente a eficiência da operação.',
-        iconName: 'Activity',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-3-9', text: 'Movimentação - Distâncias percorridas pelos materiais.' },
-          { id: '4-3-10', text: 'Produtividade - Tempo de ciclo entre operações.' },
-          { id: '4-3-11', text: 'Gargalos - Pontos de congestionamento no fluxo.' },
-          { id: '4-3-12', text: 'Rastreabilidade - Capacidade de acompanhar o produto.' }
-        ]
+        subtitle: 'O Fluxo de Valor Contínuo no Chão de Fábrica',
+        freeText: 'O layout define a disposição física dos recursos. Um fluxo linear ou em U evita movimentação inútil, cruzamento de processos, danos ao material e gargalos no processo produtivo.',
+        iconName: 'Milestone',
+        layout: 'flow',
+        flowNodes: [
+          { id: 'fn-2-1', label: 'Estoque → Corte', description: 'Blocos de espuma são fatiados' },
+          { id: 'fn-2-2', label: 'Montagem → Costura', description: 'Componentes são unidos e revestidos' },
+          { id: 'fn-2-3', label: 'Inspeção → Expedição', description: 'Controle de qualidade e envio' }
+        ],
+        tipText: 'Exemplo Prático: O layout em U aproxima as docas de entrada e saída, otimizando movimentações logísticas.',
+        alertText: 'Erro Comum: Layout em zigue-zague ou fluxos cruzados.',
+        moduleDetails: {
+          objetivo: 'Ensinar que uma fábrica possui um fluxo físico contínuo.',
+          conceitos: 'Layout industrial define a disposição física. Influencia diretamente movimentação, produtividade, gargalos, perdas e rastreabilidade.',
+          fluxoText: 'RECEBIMENTO → ESTOQUE → CORTE → MONTAGEM → COSTURA → ACABAMENTO → INSPEÇÃO → EMBALAGEM → EXPEDIÇÃO',
+          exemploPratico: 'Layouts lineares, em U ou celulares são escolhidos para reduzir tráfego desnecessário de material.',
+          aplicacaoPlataforma: 'Configure no sistema a sequência de setores operacionais e rotas logísticas internas.',
+          errosComuns: 'Layout em zigue-zague ou cruzamento de fluxos, que geram gargalos e riscos de acidentes.',
+          resumo: 'Um bom layout minimiza distâncias e elimina movimentações sem valor agregado.',
+          quiz: [
+            {
+              question: 'Qual é o impacto de um layout industrial mal planejado?',
+              options: ['Aumento desnecessário da movimentação física e perdas de tempo', 'Melhora na eficiência', 'Nenhum impacto'],
+              correctIndex: 0,
+              explanation: 'Disposições ineficientes obrigam materiais e operadores a percorrerem distâncias redundantes, destruindo a produtividade.'
+            }
+          ],
+          exercicioPratico: 'Identifique 3 pontos de retrocesso (zigue-zague) na sua linha física de fabricação atual.'
+        }
       },
       {
         id: 'slide-4-4',
-        title: 'Módulo 3: Setores',
-        subtitle: 'Áreas funcionais da fábrica',
-        freeText: 'Setores são áreas divididas por função dentro da fábrica.',
+        title: 'Módulo 3: Setores Funcionais',
+        subtitle: 'Divisão Organizacional e de Coordenação',
+        freeText: 'Setores não produzem peças diretamente; eles agrupam e organizam atividades similares. No Industrial OS, os setores coordenam as pessoas e as máquinas.',
         imageUrl: '/assets/setores.png',
         iconName: 'LayoutGrid',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-4b',
-        title: 'Módulo 3: Setores',
-        subtitle: 'Tipos de setores',
-        freeText: 'Cada setor tem uma função específica na operação.',
-        iconName: 'Layers',
-        layout: 'bullets-only',
+        layout: 'two-columns',
         listItems: [
-          { id: '4-4-1', text: 'Produção - Áreas onde a transformação acontece.' },
-          { id: '4-4-2', text: 'PCP - Planejamento e Controle da Produção.' },
-          { id: '4-4-3', text: 'Qualidade - Verificação e controle de qualidade.' },
-          { id: '4-4-4', text: 'Compras - Aquisição de materiais e serviços.' }
-        ]
-      },
-      {
-        id: 'slide-4-4c',
-        title: 'Módulo 3: Setores',
-        subtitle: 'Setores de apoio',
-        freeText: 'Setores de apoio são essenciais para a operação contínua.',
-        iconName: 'Settings',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-4-5', text: 'Almoxarifado - Armazenamento de materiais e ferramentas.' },
-          { id: '4-4-6', text: 'Manutenção - Conservação de máquinas e equipamentos.' },
-          { id: '4-4-7', text: 'Expedição - Preparação e envio de produtos.' },
-          { id: '4-4-8', text: 'Recebimento - Entrada e controle de matérias-primas.' }
-        ]
+          { id: 'li-3-1', text: 'PCP: O cérebro que planeja o sequenciamento das ordens' },
+          { id: 'li-3-2', text: 'Compras & Almoxarifado: Garante matéria-prima e estoque' },
+          { id: 'li-3-3', text: 'Produção: Transforma matéria-prima em colchões reais' },
+          { id: 'li-3-4', text: 'Qualidade & Manutenção: Apoiam a linha garantindo padrão e disponibilidade' }
+        ],
+        tipText: 'Exemplo Prático: O setor de Costura coordena máquinas retas e overlocks, organizando a fila de trabalho.',
+        alertText: 'Erro Comum: Criar setores de menos (dificulta controle) ou setores demais (gera burocracia).',
+        moduleDetails: {
+          objetivo: 'Explicar o que é um setor e a diferença entre os principais setores industriais.',
+          conceitos: 'Setor é uma divisão organizacional que agrupa atividades similares (Produção, PCP, Qualidade, Compras, Almoxarifado, Manutenção).',
+          fluxoText: 'PCP → Compras → Almoxarifado → Produção → Qualidade → Expedição (com apoio de Manutenção)',
+          exemploPratico: 'O setor de Costura coordena operadores e máquinas retas e overlocks, organizando a fila de trabalho.',
+          aplicacaoPlataforma: 'Cadastre os setores organizacionais e associe responsáveis diretos no Industrial OS.',
+          errosComuns: 'Confundir setor com centro de trabalho ou criar setores específicos demais dificultando a gestão.',
+          resumo: 'Setores organizam a fábrica de forma administrativa e funcional, sem produzir peças diretamente.',
+          quiz: [
+            {
+              question: 'Qual o setor responsável por planejar o que e quando produzir?',
+              options: ['PCP (Planejamento e Controle da Produção)', 'Setor de Compras', 'Manutenção'],
+              correctIndex: 0,
+              explanation: 'O PCP é o cérebro que organiza a agenda de fabricação.'
+            }
+          ],
+          exercicioPratico: 'Mapeie os setores administrativos e operacionais da sua fábrica e indique seus líderes.'
+        }
       },
       {
         id: 'slide-4-5',
         title: 'Módulo 4: Centros de Trabalho',
-        subtitle: 'Hierarquia de organização',
-        freeText: 'O setor não produz. Quem produz são os Centros de Trabalho.',
-        iconName: 'Layers',
-        layout: 'bullets-only',
+        subtitle: 'Onde a Transformação Realmente Acontece',
+        freeText: 'O setor organiza, mas o Centro de Trabalho (CT) produz. Um CT é a unidade produtiva básica: pode ser uma única máquina, uma bancada manual de montagem ou uma célula de operadores. Monitoramos quatro métricas críticas de cada CT:',
+        iconName: 'Target',
+        layout: 'step-by-step',
         listItems: [
-          { id: '4-5-1', text: 'Setor - Área física organizada.' },
-          { id: '4-5-2', text: 'Centro de Trabalho - Agrupamento lógico de recursos.' },
-          { id: '4-5-3', text: 'Máquinas - Equipamentos que realizam operações.' },
-          { id: '4-5-4', text: 'Capacidade - Produção possível por centro.' }
-        ]
-      },
-      {
-        id: 'slide-4-5b',
-        title: 'Módulo 4: Centros de Trabalho',
-        subtitle: 'Exemplo prático',
-        freeText: 'Exemplo de organização dentro de um setor de costura.',
-        iconName: 'Cog',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-5-5', text: 'Setor Costura - Área física de costura.' },
-          { id: '4-5-6', text: 'Máquina 1 - Costura reta.' },
-          { id: '4-5-7', text: 'Máquina 2 - Overlock.' },
-          { id: '4-5-8', text: 'Máquina 3 - Quilting.' }
-        ]
-      },
-      {
-        id: 'slide-4-5c',
-        title: 'Módulo 4: Centros de Trabalho',
-        subtitle: 'Métricas de controle',
-        freeText: 'Centros de trabalho são monitorados por métricas de desempenho.',
-        iconName: 'Activity',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-5-9', text: 'Capacidade - Produção máxima possível.' },
-          { id: '4-5-10', text: 'Fila - Ordens aguardando processamento.' },
-          { id: '4-5-11', text: 'Ocupação - Percentual de utilização.' },
-          { id: '4-5-12', text: 'Disponibilidade - Tempo disponível para produção.' }
-        ]
+          { id: 'li-4-1', text: 'Capacidade Nominal: O limite teórico de produção diária do centro' },
+          { id: 'li-4-2', text: 'Fila de Trabalho: Ordens de fabricação aguardando execução naquele centro' },
+          { id: 'li-4-3', text: 'Taxa de Ocupação: O percentual de tempo em atividade útil registrada' },
+          { id: 'li-4-4', text: 'Taxa de Disponibilidade: Tempo pronto para uso vs tempo parado por falha' }
+        ],
+        tipText: 'Exemplo Prático: A mesa de montagem manual #02 é um Centro de Trabalho dentro do setor de Montagem.',
+        alertText: 'Erro Comum: Cadastrar a capacidade nominal desconsiderando paradas normais (setup, limpeza).',
+        moduleDetails: {
+          objetivo: 'Explicar que quem produz são os Centros de Trabalho, não os setores.',
+          conceitos: 'Centro de Trabalho (CT) é a unidade produtiva básica (máquina, bancada manual, ou célula). Monitora capacidade, fila, ocupação e disponibilidade.',
+          fluxoText: 'Setor Costura → CT 01 (Máquina Reta 01) | CT 02 (Máquina Overlock 01)',
+          exemploPratico: 'O setor de Montagem tem 10 mesas manuais (cada uma é um CT) com capacidade de 20 colchões por dia.',
+          aplicacaoPlataforma: 'Cadastre cada CT associando-o ao seu setor correspondente e defina sua capacidade nominal.',
+          errosComuns: 'Não cadastrar todos os CTs ou superestimar a capacidade teórica sem considerar paradas normais.',
+          resumo: 'CTs são os pontos reais onde ocorre a agregação de valor física ao produto.',
+          quiz: [
+            {
+              question: 'Qual a diferença entre Setor e Centro de Trabalho?',
+              options: ['Setor é a área organizacional; CT é o ponto produtivo real', 'Setor produz e CT organiza'],
+              correctIndex: 0,
+              explanation: 'Setor é organizacional, enquanto o Centro de Trabalho é o local físico onde a produção ocorre.'
+            }
+          ],
+          exercicioPratico: 'Identifique e descreva o centro de trabalho gargalo da sua linha de produção atual.'
+        }
       },
       {
         id: 'slide-4-6',
-        title: 'Módulo 5: Máquinas',
-        subtitle: 'Equipamentos de produção',
-        freeText: 'Máquinas típicas de uma fábrica de colchões por tipo de operação.',
-        iconName: 'Cog',
-        layout: 'bullets-only',
+        title: 'Módulo 5: Máquinas Produtivas',
+        subtitle: 'Os Motores da Transformação Industrial',
+        freeText: 'As máquinas executam a transformação física direta de materiais. Na fábrica de colchões, cada etapa possui tecnologias especializadas com vida útil, tempos de preparação (setup) e capacidades nominais específicas.',
+        iconName: 'Cpu',
+        layout: 'two-columns',
         listItems: [
-          { id: '4-6-1', text: 'Corte - Serra Vertical, Serra Horizontal, CNC.' },
-          { id: '4-6-2', text: 'Costura - Reta, Overlock, Quilting.' },
-          { id: '4-6-3', text: 'Montagem - Mesas, Prensas.' },
-          { id: '4-6-4', text: 'Embalagem - Seladora, Roll Pack, Prensa.' }
-        ]
-      },
-      {
-        id: 'slide-4-6b',
-        title: 'Módulo 5: Máquinas',
-        subtitle: 'Equipamentos de apoio',
-        freeText: 'Equipamentos auxiliares essenciais para a produção.',
-        iconName: 'Settings',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-6-5', text: 'Colagem - Cabines, Compressores.' },
-          { id: '4-6-6', text: 'Movimentação - Empilhadeiras, Paleteiras.' },
-          { id: '4-6-7', text: 'Vida útil - Tempo de operação esperado.' },
-          { id: '4-6-8', text: 'Produção/hora - Capacidade por máquina.' }
-        ]
+          { id: 'li-5-1', text: 'Serra Vertical / CNC: Corta grandes blocos de espuma com precisão' },
+          { id: 'li-5-2', text: 'Máquinas de Costura Reta & Overlock: Unem tampo, lateral e fitilho' },
+          { id: 'li-5-3', text: 'Máquinas de Quilting: Criam relevos estéticos confortáveis nas espumas' },
+          { id: 'li-5-4', text: 'Seladora / Roll Pack: Comprimem e embalam colchões para logística compacta' }
+        ],
+        tipText: 'Exemplo Prático: Uma Serra Vertical corta 50 blocos de espuma por hora. Sua eficiência real é monitorada contra esta meta.',
+        alertText: 'Erro Comum: Ignorar o tempo de preparação (setup) ao trocar o tipo de produto.',
+        moduleDetails: {
+          objetivo: 'Apresentar as máquinas típicas de uma fábrica de colchões e sua gestão.',
+          conceitos: 'Máquinas executam a transformação física direta. Tipos: Serra Vertical/CNC (corte), Reta/Quilting (costura), Prensas/Rollpack (embalagem). Monitora-se vida útil, setup e capacidade real.',
+          fluxoText: 'Serra de Espuma → Mesa de Colagem → Máquina de Costura → Seladora Vácuo',
+          exemploPratico: 'Uma serra vertical corta 50 blocos por hora. Se trabalhar 8h com setup de 1h, produz 350 blocos.',
+          aplicacaoPlataforma: 'Vincule cada máquina cadastrada a um Centro de Trabalho e monitore sua capacidade nominal.',
+          errosComuns: 'Ignorar o tempo de setup (preparação) na troca de produtos ou usar capacidade teórica inacessível.',
+          resumo: 'Máquinas são os motores produtivos e exigem medição precisa de capacidade e tempo de setup.',
+          quiz: [
+            {
+              question: 'Qual a função de uma máquina de Roll Pack?',
+              options: ['Comprimir e embalar o colchão a vácuo em rolo para reduzir o volume', 'Fatiar a espuma', 'Limpar as agulhas da overlock'],
+              correctIndex: 0,
+              explanation: 'O Roll Pack comprime o colchão a vácuo para reduzir os custos logísticos de transporte.'
+            }
+          ],
+          exercicioPratico: 'Liste os tempos médios de setup de 2 máquinas críticas da sua fábrica.'
+        }
       },
       {
         id: 'slide-4-7',
-        title: 'Módulo 6: Equipamentos',
-        subtitle: 'Diferença entre máquina e equipamento',
-        freeText: 'Equipamentos são recursos auxiliares que suportam a produção.',
+        title: 'Módulo 6: Equipamentos de Suporte',
+        subtitle: 'Garantindo a Infraestrutura Produtiva',
+        freeText: 'Enquanto a máquina transforma o colchão diretamente, os Equipamentos fornecem a infraestrutura de suporte indispensável para que a fábrica continue funcionando de forma contínua e segura. Sem compressores, balanças ou coletores, as máquinas principais param de funcionar.',
         iconName: 'Settings',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-7-1', text: 'Compressores - Suprimento de ar comprimido.' },
-          { id: '4-7-2', text: 'Geradores - Energia de emergência.' },
-          { id: '4-7-3', text: 'Exaustores - Ventilação e extração.' },
-          { id: '4-7-4', text: 'Balanças - Pesagem de materiais.' }
-        ]
-      },
-      {
-        id: 'slide-4-7b',
-        title: 'Módulo 6: Equipamentos',
-        subtitle: 'Equipamentos de tecnologia',
-        freeText: 'Equipamentos tecnológicos para controle e registro.',
-        iconName: 'Computer',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-7-5', text: 'Computadores - Controle e gestão.' },
-          { id: '4-7-6', text: 'Coletores - Coleta de dados.' },
-          { id: '4-7-7', text: 'Impressoras - Etiquetas e documentos.' },
-          { id: '4-7-8', text: 'Sensores - Monitoramento automático.' }
-        ]
+        layout: 'content',
+        tipText: 'Exemplo Prático: O compressor de ar de 50 HP alimenta as pistolas pneumáticas de aplicação de cola do setor de montagem.',
+        alertText: 'Erro Comum: Deixar equipamentos críticos fora do plano de manutenção preventiva.',
+        moduleDetails: {
+          objetivo: 'Explicar a diferença de máquinas e equipamentos, focando na infraestrutura.',
+          conceitos: 'Máquina transforma o produto; Equipamento dá suporte operacional (compressores de ar, geradores, exaustores, balanças, coletores).',
+          fluxoText: 'Compressor de Ar → Rede de Pressão → Pistolas de Cola do Centro de Trabalho',
+          exemploPratico: 'O compressor de ar alimenta 10 pistolas pneumáticas na colagem. Se ele quebrar, o setor inteiro para.',
+          aplicacaoPlataforma: 'Cadastre equipamentos de infraestrutura associando-os aos setores atendidos e monitore disponibilidade.',
+          errosComuns: 'Esquecer de programar manutenção preventiva para equipamentos críticos, gerando paradas em cadeia.',
+          resumo: 'Equipamentos não transformam o colchão, mas sem eles a linha principal não opera.',
+          quiz: [
+            {
+              question: 'Qual o papel de um compressor de ar na produção de colchões?',
+              options: ['Fornecer ar comprimido para ferramentas como pistolas de cola e grampeadores', 'Cortar lâminas de espuma', 'Costurar o fitilho'],
+              correctIndex: 0,
+              explanation: 'O compressor é vital para alimentar as pistolas pneumáticas de aplicação de cola e grampeadores.'
+            }
+          ],
+          exercicioPratico: 'Identifique 2 equipamentos críticos cuja falha pararia a produção inteira.'
+        }
       },
       {
         id: 'slide-4-8',
-        title: 'Módulo 7: Ferramentas',
-        subtitle: 'Ferramentas utilizadas pelos operadores',
-        freeText: 'Ferramentas são instrumentos manuais usados na execução das operações.',
+        title: 'Módulo 7: Ferramentas Manuais',
+        subtitle: 'Extensão da Capacidade do Operador',
+        freeText: 'As ferramentas são dispositivos manuais utilizados pelos operadores para montagem, corte e ajustes. Elas exigem controle individual de inventário, calibração e substituição periódica devido ao desgaste natural no trabalho repetitivo diário.',
         imageUrl: '/assets/ferramentas.png',
         iconName: 'Wrench',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-8b',
-        title: 'Módulo 7: Ferramentas',
-        subtitle: 'Tipos de ferramentas',
-        freeText: 'Exemplos de ferramentas comuns em fábrica de colchões.',
-        iconName: 'Scissors',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-8-1', text: 'Tesouras - Corte de tecidos e materiais.' },
-          { id: '4-8-2', text: 'Estiletes - Corte preciso de espumas.' },
-          { id: '4-8-3', text: 'Trenas - Medição e marcação.' },
-          { id: '4-8-4', text: 'Esquadros - Alinhamento e medição.' }
-        ]
-      },
-      {
-        id: 'slide-4-8c',
-        title: 'Módulo 7: Ferramentas',
-        subtitle: 'Ferramentas de montagem',
-        freeText: 'Ferramentas utilizadas na montagem e acabamento.',
-        iconName: 'Hammer',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-8-5', text: 'Pistolas - Aplicação de cola e adesivos.' },
-          { id: '4-8-6', text: 'Grampeadores - Fixação de componentes.' },
-          { id: '4-8-7', text: 'Alicates - Corte e fixação de arames.' },
-          { id: '4-8-8', text: 'Chaves - Ajuste de máquinas e equipamentos.' }
-        ]
+        layout: 'content',
+        tipText: 'Exemplo Prático: Estiletes ergonômicos e pistolas manuais de cola quente são ferramentas essenciais para fixar as camadas confortáveis.',
+        alertText: 'Erro Comum: Falta de controle de perdas de ferramentas no chão de fábrica, usando esquadros ou trenas descalibrados.',
+        moduleDetails: {
+          objetivo: 'Mapear e gerenciar ferramentas utilizadas pelos operadores.',
+          conceitos: 'Instrumentos manuais operados diretamente (tesouras, estiletes, trenas, esquadros, pistolas manuais). Exigem calibração e substituição periódica.',
+          fluxoText: 'Estilete/Esquadro (Corte) → Pistola Manual (Colagem) → Tesoura (Acabamento)',
+          exemploPratico: 'O operador usa esquadro e trena para alinhar as espumas. Uma trena desgastada gera colchões fora da medida.',
+          aplicacaoPlataforma: 'Cadastre ferramentas controlando empréstimos, devoluções e substituições por desgaste.',
+          errosComuns: 'Falta de controle de inventário de ferramentas manuais ou uso de ferramentas desgastadas que afetam qualidade.',
+          resumo: 'Ferramentas são extensões manuais da capacidade do operador que demandam controle rígido de calibração.',
+          quiz: [
+            {
+              question: 'Por que trenas e esquadros exigem controle de calibração?',
+              options: ['Para evitar variações e desvios de dimensão final no colchão', 'Para reduzir o tempo de costura', 'Para registrar o tempo de máquina parada'],
+              correctIndex: 0,
+              explanation: 'Variações em trenas geram cortes errados e perda de materiais ou retrabalho.'
+            }
+          ],
+          exercicioPratico: 'Liste as ferramentas manuais mandatórias para o setor de Montagem e Colagem.'
+        }
       },
       {
         id: 'slide-4-9',
-        title: 'Módulo 8: Pessoas',
-        subtitle: 'Estrutura organizacional',
-        freeText: 'A estrutura organizacional define a hierarquia e funções na fábrica.',
+        title: 'Módulo 8: Pessoas & Hierarquia',
+        subtitle: 'A Estrutura de Liderança e Execução',
+        freeText: 'As pessoas são o ativo mais valioso da fábrica. Para garantir eficiência e fluidez na comunicação e resolução de problemas, estabelecemos papéis hierárquicos com responsabilidades claras no Industrial OS.',
         iconName: 'Users',
-        layout: 'bullets-only',
+        layout: 'step-by-step',
         listItems: [
-          { id: '4-9-1', text: 'Operador - Executa operações de produção.' },
-          { id: '4-9-2', text: 'Líder - Coordena equipe de operadores.' },
-          { id: '4-9-3', text: 'Supervisor - Gerencia múltiplas equipes.' },
-          { id: '4-9-4', text: 'Gerente - Responsável pela unidade ou setor.' }
-        ]
-      },
-      {
-        id: 'slide-4-9b',
-        title: 'Módulo 8: Pessoas',
-        subtitle: 'Funções especializadas',
-        freeText: 'Funções especializadas suportam a operação.',
-        iconName: 'Briefcase',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-9-5', text: 'PCP - Planejamento e Controle da Produção.' },
-          { id: '4-9-6', text: 'Qualidade - Inspeção e controle de qualidade.' },
-          { id: '4-9-7', text: 'Manutenção - Conservação de equipamentos.' },
-          { id: '4-9-8', text: 'Compras - Aquisição de materiais.' }
-        ]
+          { id: 'li-8-1', text: 'Operador: Executa as tarefas diretamente nos centros de trabalho e realiza apontamentos' },
+          { id: 'li-8-2', text: 'Líder: Coordena uma pequena equipe (5-15 pessoas), apoiando na disciplina e no ritmo' },
+          { id: 'li-8-3', text: 'Supervisor: Gerencia líderes de múltiplos setores, focando na meta diária de produção' },
+          { id: 'li-8-4', text: 'Gerente: Define metas estratégicas de fábrica e reporta diretamente à diretoria' }
+        ],
+        tipText: 'Exemplo Prático: Se a máquina reta quebra, o Operador aponta a parada, o Líder apoia o acionamento da Manutenção.',
+        alertText: 'Erro Comum: Multivinculação informal, onde um operador responde a dois líderes diferentes.',
+        moduleDetails: {
+          objetivo: 'Apresentar a estrutura de papéis organizacionais da fábrica.',
+          conceitos: 'Papéis bem delimitados garantem disciplina e fluidez na comunicação. Níveis: Operador, Líder, Supervisor e Gerente.',
+          fluxoText: 'Operador (Executa/Aponta) → Líder (Suporta Equipe) → Supervisor (Múltiplos Setores) → Gerente (Fábrica)',
+          exemploPratico: 'Ao quebrar uma máquina, o Operador aponta, o Líder aciona manutenção e o Supervisor altera o PCP.',
+          aplicacaoPlataforma: 'Cadastre os operadores, configure a hierarquia de equipes e associe responsáveis aos setores.',
+          errosComuns: 'Multivinculação onde o operador responde a múltiplos líderes, gerando confusão de prioridades.',
+          resumo: 'A estrutura organizacional do Industrial OS define responsabilidades claras e fluxos de escala para problemas.',
+          quiz: [
+            {
+              question: 'Qual a principal atribuição do Operador na plataforma?',
+              options: ['Registrar apontamentos em tempo real de produção, paradas e refugo', 'Definir custos indiretos', 'Cadastrar a empresa'],
+              correctIndex: 0,
+              explanation: 'O operador abastece o sistema com dados reais de campo por meio de apontamentos.'
+            }
+          ],
+          exercicioPratico: 'Desenhe o organograma real do seu turno e indique os papéis correspondentes.'
+        }
       },
       {
         id: 'slide-4-10',
         title: 'Módulo 9: Matérias-Primas',
-        subtitle: 'Materiais básicos de produção',
-        freeText: 'Matérias-primas são materiais básicos que entram na fabricação do produto.',
-        imageUrl: '/assets/componentes.png',
-        iconName: 'Package',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-10b',
-        title: 'Módulo 9: Matérias-Primas',
-        subtitle: 'Exemplos de matérias-primas',
-        freeText: 'Exemplos reais de matérias-primas em fábrica de colchões.',
-        iconName: 'Layers',
-        layout: 'bullets-only',
+        subtitle: 'Os Insumos Básicos da Produção de Colchões',
+        freeText: 'As matérias-primas são os insumos físicos brutos comprados de fornecedores externos. Eles entram no almoxarifado, passam pela qualidade e são consumidos na fabricação de cada colchão.',
+        iconName: 'Boxes',
+        layout: 'two-columns',
         listItems: [
-          { id: '4-10-1', text: 'Espuma - Material principal para conforto.' },
-          { id: '4-10-2', text: 'Tecido - Revestimento externo.' },
-          { id: '4-10-3', text: 'Molas - Estrutura de suporte.' },
-          { id: '4-10-4', text: 'Cola - Adesivos para montagem.' }
-        ]
-      },
-      {
-        id: 'slide-4-10c',
-        title: 'Módulo 9: Matérias-Primas',
-        subtitle: 'Materiais de acabamento',
-        freeText: 'Materiais utilizados no acabamento e proteção do produto.',
-        iconName: 'Shield',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-10-5', text: 'Fitilho - Acabamento de bordas.' },
-          { id: '4-10-6', text: 'Feutro - Proteção e conforto.' },
-          { id: '4-10-7', text: 'Plástico - Proteção e embalagem.' },
-          { id: '4-10-8', text: 'Etiquetas - Identificação e rastreabilidade.' }
-        ]
+          { id: 'li-10-1', text: 'Blocos de Espuma: Densidades (D28, D33, D45) e espessuras' },
+          { id: 'li-10-2', text: 'Tecido de Revestimento: Jacquard, Malha, Matelassê' },
+          { id: 'li-10-3', text: 'Molas Ensacadas (Pocket): Estruturas elásticas de suporte' },
+          { id: 'li-10-4', text: 'Cola Industrial, Fitilhos, Etiquetas e Embalagem Plástica' }
+        ],
+        tipText: 'Exemplo Prático: Um colchão D33 consome exatamente 0.45m³ de espuma de poliuretano e 3.2m² de tecido jacquard.',
+        alertText: 'Erro Comum: Cadastrar matérias-primas com unidades de medida confusas (ex: comprar em quilo e apontar em metros).',
+        moduleDetails: {
+          objetivo: 'Explicar o que é matéria-prima e os insumos típicos de colchões.',
+          conceitos: 'Insumo físico bruto comprado externamente (espuma, tecido, mola, fitilho, cola, embalagem, etiquetas). Tem estoque mínimo.',
+          fluxoText: 'Fornecedor → Recebimento → Inspeção Qualidade → Almoxarifado → Consumo Produção',
+          exemploPratico: 'Para fabricar 100 colchões, consome-se 200m³ de espuma, 500m² de tecido e 50kg de cola.',
+          aplicacaoPlataforma: 'Cadastre as MPs com unidades de medida precisas (kg, m², m³) e defina seus estoques de segurança.',
+          errosComuns: 'Cadastrar materiais sem unidade clara ou comprar em uma unidade e apontar consumo em outra sem conversão.',
+          resumo: 'Matérias-primas são a base do produto e demandam controle rígido de unidades e estoque de segurança.',
+          quiz: [
+            {
+              question: 'Como deve ser medida a espuma em bloco no estoque?',
+              options: ['Em metro cúbico (m³)', 'Em unidades simples', 'Em metros lineares'],
+              correctIndex: 0,
+              explanation: 'Espumas em bloco possuem volume e são tratadas tecnicamente em metros cúbicos para estoque preciso.'
+            }
+          ],
+          exercicioPratico: 'Liste as 5 matérias-primas de maior valor financeiro estocadas na sua fábrica.'
+        }
       },
       {
         id: 'slide-4-11',
-        title: 'Módulo 10: Componentes',
-        subtitle: 'Peças intermediárias',
-        freeText: 'Componentes são peças intermediárias usadas em vários produtos, reduzindo duplicidade em BOM.',
-        imageUrl: '/assets/produtos.png',
+        title: 'Módulo 10: Componentes Intermediários',
+        subtitle: 'Otimizando a Linha de Montagem',
+        freeText: 'Há uma diferença crucial na engenharia: Matéria-Prima é o que você compra bruto (tecido, espuma). Componente é o que você pré-fabrica na fábrica para ser usado depois na montagem final. Cadastrar componentes simplifica a estrutura de produtos e reduz a duplicidade na ficha técnica.',
+        imageUrl: '/assets/componentes.png',
         iconName: 'Layers',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-11b',
-        title: 'Módulo 10: Componentes',
-        subtitle: 'Exemplos de componentes',
-        freeText: 'Componentes típicos em fábrica de colchões.',
-        iconName: 'Box',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-11-1', text: 'Tampo - Parte superior do colchão.' },
-          { id: '4-11-2', text: 'Lateral - Parte lateral do colchão.' },
-          { id: '4-11-3', text: 'Bloco de Molas - Estrutura interna.' },
-          { id: '4-11-4', text: 'Base - Parte inferior do colchão.' }
-        ]
-      },
-      {
-        id: 'slide-4-11c',
-        title: 'Módulo 10: Componentes',
-        subtitle: 'Componentes especiais',
-        freeText: 'Componentes especiais para produtos diferenciados.',
-        iconName: 'Star',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-11-5', text: 'Pillow - Travesseiros e almofadas.' },
-          { id: '4-11-6', text: 'Encosto - Apoio para cabeça.' },
-          { id: '4-11-7', text: 'Base Box - Base estruturada.' },
-          { id: '4-11-8', text: 'Topper - Camada superior de conforto.' }
-        ]
+        layout: 'content',
+        tipText: 'Exemplo Prático: Espuma em Bloco (MP) → Corte (Processo) → Tampo de Colchão (Componente). O Tampo fica estocado aguardando a colagem.',
+        alertText: 'Erro Comum: Tratar um componente pré-fabricado como matéria-prima comum.',
+        moduleDetails: {
+          objetivo: 'Explicar a diferença entre matéria-prima e componente pré-fabricado.',
+          conceitos: 'Matéria-prima é comprada bruta; Componente é fabricado internamente para uso posterior (tampos cortados, laterais costuradas, bloco de mola montado).',
+          fluxoText: 'Matéria-Prima (Bloco Espuma) → Processamento (Corte) → Componente (Tampo) → Montagem (Colchão)',
+          exemploPratico: 'O setor de corte pré-fabrica 50 tampos. Eles são estocados como componentes até o setor de montagem requisitá-los.',
+          aplicacaoPlataforma: 'Cadastre componentes especificando sua receita própria e controle seu estoque intermediário (WIP).',
+          errosComuns: 'Tratar um componente feito em casa como matéria-prima externa, ocultando o custo de transformação dele.',
+          resumo: 'Mapear componentes simplifica as fichas técnicas e garante rastreabilidade em cada fase.',
+          quiz: [
+            {
+              question: 'Qual a diferença entre Matéria-Prima e Componente?',
+              options: ['MP é comprada bruta; Componente é pré-fabricado internamente', 'MP é produzida internamente; Componente é comprado'],
+              correctIndex: 0,
+              explanation: 'MPs são adquiridas de fornecedores; componentes são processados na fábrica e estocados para montagem final.'
+            }
+          ],
+          exercicioPratico: 'Identifique 3 componentes pré-fabricados na sua linha que poderiam ser estocados para reduzir o lead time.'
+        }
       },
       {
         id: 'slide-4-12',
-        title: 'Módulo 11: Produtos',
-        subtitle: 'Itens prontos para venda',
-        freeText: 'Produtos finais são itens prontos para venda ao cliente.',
+        title: 'Módulo 11: Estrutura de Produtos',
+        subtitle: 'Famílias, Linhas, Variantes e Margens',
+        freeText: 'O Produto é o resultado final vendido ao cliente. Ele é estruturado em Famílias (Espuma, Molas) e Linhas (Premium, Standard). Cada produto possui variantes comerciais (Solteiro, Casal, Queen, King). Na ficha técnica centralizamos dimensões, custos acumulados e o preço de venda sugerido.',
         imageUrl: '/assets/produtos.png',
         iconName: 'Package',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-12b',
-        title: 'Módulo 11: Produtos',
-        subtitle: 'Características do produto',
-        freeText: 'Cada produto tem características específicas definidas.',
-        iconName: 'FileText',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-12-1', text: 'Ficha técnica - Especificações técnicas.' },
-          { id: '4-12-2', text: 'BOM - Lista de materiais.' },
-          { id: '4-12-3', text: 'Custos - Custo de produção.' },
-          { id: '4-12-4', text: 'Preço - Preço de venda.' }
-        ]
-      },
-      {
-        id: 'slide-4-12c',
-        title: 'Módulo 11: Produtos',
-        subtitle: 'Classificação de produtos',
-        freeText: 'Produtos são organizados em famílias e linhas.',
-        iconName: 'FolderTree',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-12-5', text: 'Família - Grupo de produtos similares.' },
-          { id: '4-12-6', text: 'Linha - Variação dentro da família.' },
-          { id: '4-12-7', text: 'Variantes - Diferenças específicas.' },
-          { id: '4-12-8', text: 'Dimensões - Tamanhos disponíveis.' }
-        ]
+        layout: 'content',
+        tipText: 'Exemplo Prático: O colchão "Orto-Comfort Casal D33" pertence à Família Espuma, Linha Standard. Ele possui as variantes Casal (1.38x1.88) e Solteiro.',
+        alertText: 'Erro Comum: Criar fichas de produtos individuais para cada variante de tamanho, inflando o cadastro.',
+        moduleDetails: {
+          objetivo: 'Apresentar a arquitetura comercial de produtos, famílias, linhas e variantes.',
+          conceitos: 'Produto final é o que se vende. Organizado em Famílias (Espuma, Molas) e Linhas (Premium, Standard) com Variantes de tamanho (Casal, Solteiro).',
+          fluxoText: 'Família (Molas) → Linha (Premium) → Produto (Pocket Confort) → Variante (King Size)',
+          exemploPratico: 'O colchão Orto-Comfort possui variantes Casal (1.38x1.88) e Solteiro (0.88x1.88), compartilhando o mesmo roteiro básico.',
+          aplicacaoPlataforma: 'Cadastre a estrutura hierárquica do portfólio no sistema usando variantes para economizar cadastros.',
+          errosComuns: 'Duplicar cadastros criando um produto completo diferente para cada cor ou tamanho, inflando o banco de dados.',
+          resumo: 'A correta organização por famílias e variantes otimiza as análises de margem e relatórios.',
+          quiz: [
+            {
+              question: 'Para que servem as Variantes no cadastro de produtos?',
+              options: ['Para agrupar dimensões e cores diferentes do mesmo produto sem duplicar fichas', 'Para alterar o tempo de manutenção das máquinas', 'Para excluir o MRP'],
+              correctIndex: 0,
+              explanation: 'As variantes evitam redundância mantendo a mesma estrutura básica com parâmetros variáveis.'
+            }
+          ],
+          exercicioPratico: 'Crie a árvore de famílias e variantes do modelo de colchão mais vendido da sua fábrica.'
+        }
       },
       {
         id: 'slide-4-13',
-        title: 'Módulo 12: Engenharia do Produto',
-        subtitle: 'Estrutura e definição',
-        freeText: 'Engenharia do produto define como o produto é fabricado.',
-        iconName: 'Settings',
-        layout: 'bullets-only',
+        title: 'Módulo 12: Engenharia de Produto',
+        subtitle: 'A Lista Estruturada de Materiais (BOM)',
+        freeText: 'A Bill of Materials (BOM) ou lista de materiais é a receita exata do colchão. Ela define com precisão milimétrica quais matérias-primas e componentes são consumidos para fabricar uma única unidade de produto acabado.',
+        iconName: 'GitFork',
+        layout: 'step-by-step',
         listItems: [
-          { id: '4-13-1', text: 'BOM - Lista de materiais e componentes.' },
-          { id: '4-13-2', text: 'Estrutura - Organização do produto.' },
-          { id: '4-13-3', text: 'Componentes - Peças que compõem o produto.' },
-          { id: '4-13-4', text: 'Consumo - Quantidade de cada material.' }
-        ]
-      },
-      {
-        id: 'slide-4-13b',
-        title: 'Módulo 12: Engenharia do Produto',
-        subtitle: 'Roteiro e tempo',
-        freeText: 'Roteiro define o caminho de fabricação.',
-        iconName: 'Workflow',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-13-5', text: 'Roteiro - Sequência de operações.' },
-          { id: '4-13-6', text: 'Tempo - Tempo padrão por operação.' },
-          { id: '4-13-7', text: 'Centros de Trabalho - Onde cada operação ocorre.' },
-          { id: '4-13-8', text: 'Capacidade - Produção possível por centro.' }
-        ]
-      },
-      {
-        id: 'slide-4-13c',
-        title: 'Módulo 13: Processos',
-        subtitle: 'Roteiro produtivo',
-        freeText: 'O roteiro produtivo define todas as etapas de fabricação.',
-        imageUrl: '/assets/cronometragem.png',
-        iconName: 'Workflow',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-13d',
-        title: 'Módulo 13: Processos',
-        subtitle: 'Etapas do roteiro',
-        freeText: 'Cada etapa transforma o produto.',
-        iconName: 'ArrowRight',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-13-9', text: 'Receber - Entrada de materiais.' },
-          { id: '4-13-10', text: 'Separar - Separação por ordem.' },
-          { id: '4-13-11', text: 'Cortar - Corte nas dimensões.' },
-          { id: '4-13-12', text: 'Montar - União de componentes.' }
-        ]
-      },
-      {
-        id: 'slide-4-13e',
-        title: 'Módulo 13: Processos',
-        subtitle: 'Etapas finais',
-        freeText: 'Etapas finais completam o produto.',
-        iconName: 'CheckCircle',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-13-13', text: 'Costurar - Costura e acabamento.' },
-          { id: '4-13-14', text: 'Fechar - Fechamento do produto.' },
-          { id: '4-13-15', text: 'Inspecionar - Verificação de qualidade.' },
-          { id: '4-13-16', text: 'Embalar - Proteção para transporte.' }
-        ]
-      },
-      {
-        id: 'slide-4-13f',
-        title: 'Módulo 14: Ordens de Produção',
-        subtitle: 'Transformando planejamento em execução',
-        freeText: 'Ordens de Produção autorizam e controlam a fabricação.',
-        imageUrl: '/assets/ordens-producao.png',
-        iconName: 'FileText',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-13g',
-        title: 'Módulo 14: Ordens de Produção',
-        subtitle: 'Ciclo da OP',
-        freeText: 'Cada OP passa por um ciclo definido.',
-        iconName: 'RefreshCw',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-13-17', text: 'Planejamento - Definição da produção.' },
-          { id: '4-13-18', text: 'Liberação - Autorização para iniciar.' },
-          { id: '4-13-19', text: 'Execução - Produção do produto.' },
-          { id: '4-13-20', text: 'Finalização - Conclusão da OP.' }
-        ]
+          { id: 'li-13-1', text: 'Estrutura Multinível: Produto acabado composto por componentes que consomem MPs' },
+          { id: 'li-13-2', text: 'Taxa de Consumo: Quantidade exata requerida de cada insumo (com margem de perda)' },
+          { id: 'li-13-3', text: 'Roteiro de Produção: Sequência de operações que as máquinas devem realizar' },
+          { id: 'li-13-4', text: 'Tempos Padrão: Tempos nominais de ciclo cronometrados para cada operação' }
+        ],
+        tipText: 'Exemplo Prático: O colchão Premium Casal exige: 1 Estrutura de Molas, 2 Tampos acolchoados, 4.5m de lateral.',
+        alertText: 'Erro Comum: Deixar de incluir a margem de perda de tecido na BOM.',
+        moduleDetails: {
+          objetivo: 'Explicar como funciona a Lista de Materiais (BOM) e a ficha técnica.',
+          conceitos: 'BOM (recipe) define insumos, componentes e taxas exatas de consumo por unidade. Roteiro indica as etapas de fabricação.',
+          fluxoText: 'BOM (Ingredientes) + Roteiro (Como Fazer) → Engenharia → Custo Standard',
+          exemploPratico: 'O colchão Premium Casal consome: 1 Bloco Molas, 2 Tampos, 4.5m lateral jacquard e 0.15kg de cola hotmelt.',
+          aplicacaoPlataforma: 'Desenhe a BOM multinível de cada produto, configurando as taxas de perda normais de cada insumo.',
+          errosComuns: 'Omitir a taxa de desperdício do tecido na BOM, fazendo com que o estoque físico acabe antes do previsto.',
+          resumo: 'A BOM é o coração do cálculo de custos e do planejamento de compras (MRP).',
+          quiz: [
+            {
+              question: 'O que é a BOM (Bill of Materials)?',
+              options: ['A lista estruturada de materiais e quantidades para fabricar um produto', 'O manual de manutenção preventiva', 'O relatório de lucros e perdas'],
+              correctIndex: 0,
+              explanation: 'BOM significa Bill of Materials, ou seja, a lista exata de materiais necessários para a fabricação.'
+            }
+          ],
+          exercicioPratico: 'Escreva a lista estruturada (BOM) simplificada para o modelo padrão da sua linha de montagem.'
+        }
       },
       {
         id: 'slide-4-14',
-        title: 'Módulo 15: Apontamentos',
-        subtitle: 'Registros de produção',
-        freeText: 'Apontamentos registram tudo que acontece na produção.',
-        imageUrl: '/assets/apontamentos.png',
-        iconName: 'Activity',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-14b',
-        title: 'Módulo 15: Apontamentos',
-        subtitle: 'Tipos de registros',
-        freeText: 'Cada tipo de registro captura informações específicas.',
-        iconName: 'FileText',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-1', text: 'Início - Início da operação.' },
-          { id: '4-14-2', text: 'Fim - Término da operação.' },
-          { id: '4-14-3', text: 'Produção - Quantidade produzida.' },
-          { id: '4-14-4', text: 'Perdas - Perdas durante a operação.' }
-        ]
-      },
-      {
-        id: 'slide-4-14c',
-        title: 'Módulo 15: Apontamentos',
-        subtitle: 'Registros de qualidade',
-        freeText: 'Registros que afetam a qualidade do produto.',
-        iconName: 'Shield',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-5', text: 'Consumo - Materiais utilizados.' },
-          { id: '4-14-6', text: 'Refugo - Produtos defeituosos.' },
-          { id: '4-14-7', text: 'Retrabalho - Produtos refeitos.' },
-          { id: '4-14-8', text: 'Setup - Tempo de preparação.' }
-        ]
-      },
-      {
-        id: 'slide-4-14d',
-        title: 'Módulo 15: Apontamentos',
-        subtitle: 'Registros de disponibilidade',
-        freeText: 'Registros que afetam a disponibilidade de produção.',
+        title: 'Módulo 13: Processos e Cronometragem',
+        subtitle: 'O Balanceamento da Linha de Produção',
+        freeText: 'Para planejar a produção e calcular a capacidade real, a engenharia deve mapear o roteiro de processos e realizar a cronometragem científica dos tempos padrão de cada operação produtiva.',
+        imageUrl: '/assets/cronometragem.png',
         iconName: 'Clock',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-9', text: 'Parada - Interrupção da produção.' },
-          { id: '4-14-10', text: 'Motivo - Causa da parada.' },
-          { id: '4-14-11', text: 'Operador - Responsável pela operação.' },
-          { id: '4-14-12', text: 'Equipamento - Máquina utilizada.' }
-        ]
-      },
-      {
-        id: 'slide-4-14e',
-        title: 'Módulo 16: Estoques',
-        subtitle: 'Controle de materiais',
-        freeText: 'Estoques controlam todos os materiais e produtos.',
-        iconName: 'Package',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-13', text: 'Matéria-prima - Materiais básicos.' },
-          { id: '4-14-14', text: 'Semiacabado - Produtos em processo.' },
-          { id: '4-14-15', text: 'Produto acabado - Produtos prontos.' },
-          { id: '4-14-16', text: 'Quarentena - Produtos em análise.' }
-        ]
-      },
-      {
-        id: 'slide-4-14f',
-        title: 'Módulo 16: Estoques',
-        subtitle: 'Gestão de estoques',
-        freeText: 'Gestão de estoques garante disponibilidade e controle.',
-        iconName: 'Warehouse',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-17', text: 'Expedição - Produtos prontos para envio.' },
-          { id: '4-14-18', text: 'Inventário - Contagem física.' },
-          { id: '4-14-19', text: 'Movimentações - Entradas e saídas.' },
-          { id: '4-14-20', text: 'Saldos - Quantidade disponível.' }
-        ]
-      },
-      {
-        id: 'slide-4-14g',
-        title: 'Módulo 17: Qualidade',
-        subtitle: 'Controle de qualidade',
-        freeText: 'Qualidade garante que produtos atendam aos padrões.',
-        iconName: 'Shield',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-21', text: 'Inspeções - Verificação de qualidade.' },
-          { id: '4-14-22', text: 'Refugo - Produtos reprovados.' },
-          { id: '4-14-23', text: 'Retrabalho - Produtos corrigidos.' },
-          { id: '4-14-24', text: 'Não Conformidades - Desvios de padrão.' }
-        ]
-      },
-      {
-        id: 'slide-4-14h',
-        title: 'Módulo 17: Qualidade',
-        subtitle: 'Ferramentas de qualidade',
-        freeText: 'Ferramentas para controle e rastreabilidade.',
-        iconName: 'CheckCircle',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-25', text: 'Checklist - Lista de verificação.' },
-          { id: '4-14-26', text: 'Rastreabilidade - Acompanhamento do lote.' },
-          { id: '4-14-27', text: 'Amostras - Testes de qualidade.' },
-          { id: '4-14-28', text: 'Certificados - Documentação de qualidade.' }
-        ]
-      },
-      {
-        id: 'slide-4-14i',
-        title: 'Módulo 18: Manutenção',
-        subtitle: 'Conservação de equipamentos',
-        freeText: 'Manutenção garante disponibilidade de equipamentos.',
-        iconName: 'Wrench',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-29', text: 'Preventiva - Manutenção programada.' },
-          { id: '4-14-30', text: 'Corretiva - Reparo de falhas.' },
-          { id: '4-14-31', text: 'Preditiva - Previsão de falhas.' },
-          { id: '4-14-32', text: 'Lubrificação - Lubrificação programada.' }
-        ]
-      },
-      {
-        id: 'slide-4-14j',
-        title: 'Módulo 18: Manutenção',
-        subtitle: 'Indicadores de manutenção',
-        freeText: 'Indicadores medem a eficiência da manutenção.',
-        iconName: 'Activity',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-33', text: 'Paradas - Tempo de parada.' },
-          { id: '4-14-34', text: 'MTBF - Tempo médio entre falhas.' },
-          { id: '4-14-35', text: 'MTTR - Tempo médio de reparo.' },
-          { id: '4-14-36', text: 'Disponibilidade - Tempo disponível.' }
-        ]
-      },
-      {
-        id: 'slide-4-14k',
-        title: 'Módulo 19: PCP',
-        subtitle: 'Planejamento e Controle da Produção',
-        freeText: 'PCP planeja e controla toda a produção.',
-        imageUrl: '/assets/pcp.png',
-        iconName: 'Calendar',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-14l',
-        title: 'Módulo 19: PCP',
-        subtitle: 'Funções do PCP',
-        freeText: 'PCP executa múltiplas funções de planejamento.',
-        iconName: 'Settings',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-37', text: 'Planejamento - Definição da produção.' },
-          { id: '4-14-38', text: 'Sequenciamento - Ordem de execução.' },
-          { id: '4-14-39', text: 'Carga Máquina - Alocação de recursos.' },
-          { id: '4-14-40', text: 'Capacidade - Produção disponível.' }
-        ]
-      },
-      {
-        id: 'slide-4-14m',
-        title: 'Módulo 19: PCP',
-        subtitle: 'Controle e ajuste',
-        freeText: 'PCP monitora e ajusta continuamente.',
-        iconName: 'RefreshCw',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-41', text: 'Acompanhamento - Monitoramento em tempo real.' },
-          { id: '4-14-42', text: 'Replanejamento - Ajustes conforme necessário.' },
-          { id: '4-14-43', text: 'Priorização - Definição de prioridades.' },
-          { id: '4-14-44', text: 'Otimização - Melhoria contínua.' }
-        ]
-      },
-      {
-        id: 'slide-4-14n',
-        title: 'Módulo 20: Custos Industriais',
-        subtitle: 'Cálculo de custos',
-        freeText: 'Custos industriais compõem o custo do produto.',
-        iconName: 'DollarSign',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-45', text: 'Matéria-prima - Custo de materiais.' },
-          { id: '4-14-46', text: 'MOD - Mão de obra direta.' },
-          { id: '4-14-47', text: 'Energia - Custo de energia.' },
-          { id: '4-14-48', text: 'Máquinas - Custo de equipamentos.' }
-        ]
-      },
-      {
-        id: 'slide-4-14o',
-        title: 'Módulo 20: Custos Industriais',
-        subtitle: 'Custos adicionais',
-        freeText: 'Custos adicionais completam o cálculo.',
-        iconName: 'Calculator',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-49', text: 'Depreciação - Desgaste de equipamentos.' },
-          { id: '4-14-50', text: 'Ferramentas - Custo de ferramentas.' },
-          { id: '4-14-51', text: 'Custos indiretos - Custos gerais.' },
-          { id: '4-14-52', text: 'Margem - Lucro desejado.' }
-        ]
-      },
-      {
-        id: 'slide-4-14p',
-        title: 'Módulo 20: Custos Industriais',
-        subtitle: 'Preço e rentabilidade',
-        freeText: 'Custo define preço e rentabilidade.',
-        iconName: 'TrendingUp',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-53', text: 'Preço - Preço de venda.' },
-          { id: '4-14-54', text: 'Rentabilidade - Lucro sobre custo.' },
-          { id: '4-14-55', text: 'Markup - Percentual sobre custo.' },
-          { id: '4-14-56', text: 'Competitividade - Comparação com mercado.' }
-        ]
-      },
-      {
-        id: 'slide-4-14q',
-        title: 'Módulo 21: Indicadores Industriais',
-        subtitle: 'KPIs de produção',
-        freeText: 'Indicadores medem o desempenho da fábrica.',
-        iconName: 'Activity',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-57', text: 'OEE - Eficiência global.' },
-          { id: '4-14-58', text: 'Lead Time - Tempo de entrega.' },
-          { id: '4-14-59', text: 'Setup - Tempo de preparação.' },
-          { id: '4-14-60', text: 'Scrap - Perda de material.' }
-        ]
-      },
-      {
-        id: 'slide-4-14r',
-        title: 'Módulo 21: Indicadores Industriais',
-        subtitle: 'KPIs de qualidade e eficiência',
-        freeText: 'Indicadores de qualidade e eficiência.',
-        iconName: 'Target',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-61', text: 'Refugo - Produtos defeituosos.' },
-          { id: '4-14-62', text: 'Eficiência - Produtividade real.' },
-          { id: '4-14-63', text: 'Capacidade - Produção máxima.' },
-          { id: '4-14-64', text: 'Backlog - Pedidos pendentes.' }
-        ]
-      },
-      {
-        id: 'slide-4-14s',
-        title: 'Módulo 21: Indicadores Industriais',
-        subtitle: 'KPIs financeiros',
-        freeText: 'Indicadores financeiros medem rentabilidade.',
-        iconName: 'DollarSign',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-65', text: 'Rentabilidade - Lucro sobre vendas.' },
-          { id: '4-14-66', text: 'Custo por unidade - Custo médio.' },
-          { id: '4-14-67', text: 'Margem de contribuição - Lucro por margem.' },
-          { id: '4-14-68', text: 'ROI - Retorno sobre investimento.' }
-        ]
-      },
-      {
-        id: 'slide-4-14t',
-        title: 'Módulo 22: Inteligência Artificial Industrial',
-        subtitle: 'Copilot Industrial',
-        freeText: 'Copilot Industrial utiliza todos os dados da plataforma.',
-        imageUrl: '/assets/dashboard-mature.png',
-        iconName: 'Sparkles',
-        layout: 'hero'
-      },
-      {
-        id: 'slide-4-14u',
-        title: 'Módulo 22: Inteligência Artificial Industrial',
-        subtitle: 'O que o Copilot utiliza',
-        freeText: 'Copilot interpreta dados cadastrados na plataforma.',
-        iconName: 'Brain',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-69', text: 'Produtos - Informações de produtos.' },
-          { id: '4-14-70', text: 'Processos - Roteiros de fabricação.' },
-          { id: '4-14-71', text: 'Ordens - Ordens de produção.' },
-          { id: '4-14-72', text: 'Custos - Informações de custos.' }
-        ]
-      },
-      {
-        id: 'slide-4-14v',
-        title: 'Módulo 22: Inteligência Artificial Industrial',
-        subtitle: 'Dados operacionais',
-        freeText: 'Copilot utiliza dados operacionais em tempo real.',
-        iconName: 'Database',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-73', text: 'Estoque - Saldos e movimentações.' },
-          { id: '4-14-74', text: 'Qualidade - Inspeções e resultados.' },
-          { id: '4-14-75', text: 'PCP - Planejamento e controle.' },
-          { id: '4-14-76', text: 'Indicadores - KPIs em tempo real.' }
-        ]
-      },
-      {
-        id: 'slide-4-14w',
-        title: 'Módulo 22: Inteligência Artificial Industrial',
-        subtitle: 'Como a IA funciona',
-        freeText: 'A IA não cria informações. Ela interpreta dados.',
-        iconName: 'Lightbulb',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-14-77', text: 'Análises - Interpretação de dados.' },
-          { id: '4-14-78', text: 'Recomendações - Sugestões baseadas em dados.' },
-          { id: '4-14-79', text: 'Previsões - Projeções futuras.' },
-          { id: '4-14-80', text: 'Tomada de decisão - Apoio à decisão.' }
-        ]
+        layout: 'content',
+        tipText: 'Exemplo Prático: A operação de Costura de Fechamento (Gargalo) leva exatamente 12 minutos padrão por colchão.',
+        alertText: 'Erro Comum: Usar o menor tempo cronometrado como padrão, desconsiderando tolerâncias por fadiga humana.',
+        moduleDetails: {
+          objetivo: 'Mostrar o roteiro produtivo e o cálculo científico dos tempos padrão.',
+          conceitos: 'Operação é a etapa física de transformação que agrega valor. Cronometragem estabelece tempos padrão de ciclo com tolerâncias.',
+          fluxoText: 'Corte (15 min) → Colagem (20 min) → Costura (25 min) → Inspeção (10 min) → Embalagem (5 min)',
+          exemploPratico: 'A costura de fechamento leva 12 min padrão por colchão. O CT fornece no máximo 5 unidades por hora.',
+          aplicacaoPlataforma: 'Cadastre os roteiros de processos atrelando cada operação ao seu respectivo Centro de Trabalho.',
+          errosComuns: 'Usar o menor tempo cronometrado sem adicionar as folgas humanas por fadiga, criando metas impossíveis.',
+          resumo: 'Tempos padrão confiáveis são fundamentais para o balanceamento de linha e cálculo de capacidade.',
+          quiz: [
+            {
+              question: 'O que deve ser adicionado ao tempo cronometrado para achar o tempo padrão?',
+              options: ['Tolerâncias por fadiga humana e necessidades pessoais do operador', 'Tempo de almoço total do supervisor', 'O setup total diário'],
+              correctIndex: 0,
+              explanation: 'O tempo padrão contempla as folgas e fadigas normais para manter uma meta sustentável.'
+            }
+          ],
+          exercicioPratico: 'Cronometre um processo simples de 3 repetições, calcule a média e adicione 15% de tolerância.'
+        }
       },
       {
         id: 'slide-4-15',
-        title: 'Fluxo Geral do Conhecimento',
-        subtitle: 'Cadeia completa de dados',
-        freeText: 'Todos os elementos da fábrica estão interconectados em um fluxo contínuo.',
-        iconName: 'Link',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-15-1', text: 'EMPRESA → UNIDADE → LAYOUT → SETORES' },
-          { id: '4-15-2', text: 'CENTROS DE TRABALHO → MÁQUINAS → OPERADORES' },
-          { id: '4-15-3', text: 'MATÉRIAS-PRIMAS → COMPONENTES → PRODUTOS' },
-          { id: '4-15-4', text: 'BOM → PROCESSOS → ORDENS DE PRODUÇÃO' }
-        ]
-      },
-      {
-        id: 'slide-4-15b',
-        title: 'Fluxo Geral do Conhecimento',
-        subtitle: 'Cadeia de operações',
-        freeText: 'Operações transformam dados em informações.',
-        iconName: 'ArrowRight',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-15-5', text: 'APONTAMENTOS → ESTOQUE → QUALIDADE' },
-          { id: '4-15-6', text: 'MANUTENÇÃO → PCP → CUSTOS' },
-          { id: '4-15-7', text: 'KPIs → COPILOT INDUSTRIAL' },
-          { id: '4-15-8', text: 'TOMADA DE DECISÃO → MELHORIA CONTÍNUA' }
-        ]
+        title: 'Módulo 14: Ordens de Produção',
+        subtitle: 'A Jornada de Execução Industrial',
+        freeText: 'A Ordem de Produção (OP) é o documento oficial que autoriza e guia o chão de fábrica a produzir uma quantidade específica de um colchão. Ela interliga o planejamento administrativo à execução física real.',
+        imageUrl: '/assets/ordens-producao.png',
+        iconName: 'FileText',
+        layout: 'content',
+        tipText: 'Exemplo Prático: OP #402 ordena a produção de 50 Colchões Premium Casal. Ela nasce no PCP e reserva materiais.',
+        alertText: 'Erro Comum: Liberar OPs para a linha sem verificar a disponibilidade real de matérias-primas no estoque.',
+        moduleDetails: {
+          objetivo: 'Explicar o fluxo e o ciclo de vida de uma Ordem de Produção (OP).',
+          conceitos: 'OP é o documento oficial que autoriza e guia a produção. Ciclo: Planejamento → Liberação → Execução → Finalização.',
+          fluxoText: 'Criação (PCP) → Reserva de Insumos → Liberação Linha → Apontamentos → Fechamento Estoque',
+          exemploPratico: 'A OP #402 ordena produzir 50 colchões Premium. Ela reserva molas e tecidos, entra em produção e atualiza estoques ao final.',
+          aplicacaoPlataforma: 'Crie OPs vinculadas a demandas de pedidos, faça a liberação e monitore o status de progresso real.',
+          errosComuns: 'Liberar ordens para a fábrica sem verificar estoque de matérias-primas, travando a linha por falta de cola.',
+          resumo: 'A OP liga a estratégia de vendas à realidade física da linha de produção.',
+          quiz: [
+            {
+              question: 'O que acontece ao finalizar uma OP no Industrial OS?',
+              options: ['Baixa automática nos insumos e entrada dos colchões em Produto Acabado', 'Exclusão dos dados das máquinas', 'Aumento de custos fixos automáticos'],
+              correctIndex: 0,
+              explanation: 'A finalização realiza a baixa dos materiais consumidos da BOM e incrementa o estoque de produtos acabados.'
+            }
+          ],
+          exercicioPratico: 'Esboce os dados essenciais que devem constar em uma folha de OP para o operador de costura.'
+        }
       },
       {
         id: 'slide-4-16',
-        title: 'Resumo do Treinamento',
-        subtitle: 'Principais conceitos aprendidos',
-        freeText: 'Agora você compreende como uma fábrica funciona e como o Industrial OS representa cada etapa.',
-        iconName: 'CheckCircle',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-16-1', text: 'A fábrica existe antes do sistema.' },
-          { id: '4-16-2', text: 'Cada área física tem um módulo correspondente.' },
-          { id: '4-16-3', text: 'Os dados fluem em uma cadeia interconectada.' },
-          { id: '4-16-4', text: 'O sistema automatiza cálculos e centraliza informações.' }
-        ]
-      },
-      {
-        id: 'slide-4-16b',
-        title: 'Resumo do Treinamento',
-        subtitle: 'Conceitos avançados',
-        freeText: 'Conceitos avançados completam o entendimento.',
-        iconName: 'GraduationCap',
-        layout: 'bullets-only',
-        listItems: [
-          { id: '4-16-5', text: 'A inteligência industrial depende de dados corretos.' },
-          { id: '4-16-6', text: 'O onboarding guiado facilita a implantação gradual.' },
-          { id: '4-16-7', text: 'O Copilot IA apoia a tomada de decisão.' },
-          { id: '4-16-8', text: 'A rastreabilidade garante qualidade e conformidade.' }
-        ]
+        title: 'Módulo 15: Apontamentos de Campo',
+        subtitle: 'Garantindo Visibilidade em Tempo Real',
+        freeText: 'Apontar é registrar. Os operadores informam ao sistema exatamente o que está acontecendo fisicamente: início de lote, fim de operação, quantidade produzida, motivos de paradas de máquinas e ocorrências de refugo.',
+        imageUrl: '/assets/apontamentos.png',
+        iconName: 'Edit3',
+        layout: 'content',
+        tipText: 'Exemplo Prático: O operador aponta às 14:00: "Início de setup". Às 14:15: "Fim de setup, início de operação". O sistema computa 15 min.',
+        alertText: 'Erro Comum: Lançar apontamentos de forma acumulada apenas no fim do turno.',
+        moduleDetails: {
+          objetivo: 'Apresentar a importância do registro de dados e tipos de apontamentos.',
+          conceitos: 'Apontar é registrar. Tipos: Início, Fim, Produção Boa, Refugo, Perda de Materiais, Setup e Paradas de máquinas.',
+          fluxoText: 'Apontamento Início Setup → Fim Setup / Início OP → Registro de Refugos → Apontamento Fim OP',
+          exemploPratico: 'O operador aponta início de setup às 14h. Às 14:15h aponta início de operação, registrando 15 min de setup.',
+          aplicacaoPlataforma: 'Use os terminais coletores de campo para apontamento em tempo real por OP e Centro de Trabalho.',
+          errosComuns: 'Acumular os apontamentos para lançar de uma vez só no fim do turno, distorcendo o acompanhamento online.',
+          resumo: 'Apontamentos em tempo real fornecem visibilidade, evitam estoques fantasmas e alimentam custos.',
+          quiz: [
+            {
+              question: 'Qual o prejuízo de lançar apontamentos acumulados apenas no fim do dia?',
+              options: ['Impede a gerência e o Copilot de tomarem ações imediatas contra paradas', 'Não há prejuízo', 'Reduz o consumo de energia da máquina'],
+              correctIndex: 0,
+              explanation: 'Apontamentos tardios cegam o monitoramento em tempo real de gargalos e quebras.'
+            }
+          ],
+          exercicioPratico: 'Preencha uma simulação de apontamento contendo: início de turno, parada por quebra de agulha e fim da tarefa.'
+        }
       },
       {
         id: 'slide-4-17',
-        title: 'Próximos Passos',
-        subtitle: 'Agora que você compreende como a fábrica funciona',
-        freeText: 'Próximos Passos Práticos:\n1. Acesse o Dashboard para ver o progresso da implantação.\n2. Siga o onboarding guiado (Empresa → Setores → Funcionários → Equipamentos → Matérias-Primas → Fornecedores → Produtos → Processos).\n3. Use o Copilot (✨) em cada módulo para tirar dúvidas.\n4. Consulte o Centro de Implantação para acompanhar pendências e próximas ações.',
+        title: 'Módulo 16: Controle de Estoques',
+        subtitle: 'Evitando Paradas e Capital Parado',
+        freeText: 'O estoque de uma fábrica se divide em diferentes categorias físicas e lógicas. No Industrial OS, as movimentações de consumo e entrada de mercadorias atualizam as quantidades e geram alertas automáticos de segurança.',
+        iconName: 'Archive',
+        layout: 'two-columns',
+        listItems: [
+          { id: 'li-17-1', text: 'Estoque de Matéria-Prima: Insumos brutos aguardando requisição da fábrica' },
+          { id: 'li-17-2', text: 'Estoque em Processo (WIP): Componentes já iniciados mas não finalizados' },
+          { id: 'li-17-3', text: 'Estoque de Produto Acabado: Colchões prontos e embalados na expedição' },
+          { id: 'li-17-4', text: 'Quarentena: Lotes aguardando laudo de inspeção do controle de qualidade' }
+        ],
+        tipText: 'Exemplo Prático: Ao finalizar a OP de 50 colchões, as matérias-primas da BOM sofrem baixa automática no estoque.',
+        alertText: 'Erro Comum: Não realizar inventários rotativos periódicos para ajustar divergências físicas.',
+        moduleDetails: {
+          objetivo: 'Explicar tipos de estoque, inventário periódico e movimentação.',
+          conceitos: 'Categorias: Matéria-Prima, WIP (Processo), Produto Acabado, Quarentena. Movimentação e inventário garantem conformidade.',
+          fluxoText: 'Almoxarifado (MP) → Requisition → Linha (WIP) → Conclusão OP → Estoque (PA) → Expedição',
+          exemploPratico: 'Se 50 colchões entram em Produto Acabado, as matérias-primas correspondentes sofrem baixa imediata.',
+          aplicacaoPlataforma: 'Monitore os estoques mínimos, crie requisições internas e organize inventários rotativos.',
+          errosComuns: 'Ignorar o estoque em processo (WIP), fazendo com que materiais fiquem "desaparecidos" na linha.',
+          resumo: 'Estoques precisam ser conferidos fisicamente de forma rotativa para manter a consistência com o Industrial OS.',
+          quiz: [
+            {
+              question: 'O que é o estoque WIP (Work In Progress)?',
+              options: ['Estoque de materiais em processo de fabricação', 'Produtos prontos para carregar no caminhão', 'Estoque de computadores'],
+              correctIndex: 0,
+              explanation: 'WIP representa o inventário que já saiu do almoxarifado mas ainda não é um produto finalizado.'
+            }
+          ],
+          exercicioPratico: 'Calcule a necessidade líquida de espuma para 20 colchões com base na BOM padrão.'
+        }
+      },
+      {
+        id: 'slide-4-18',
+        title: 'Módulo 17: Controle de Qualidade',
+        subtitle: 'Inspeções, Checklists e Rastreabilidade',
+        freeText: 'O controle de qualidade garante que o colchão atenda às expectativas do cliente. Definimos checklists obrigatórios nos pontos de transição e registramos não conformidades para rastrear lotes defeituosos até a sua origem.',
+        iconName: 'ShieldCheck',
+        layout: 'checklist',
+        listItems: [
+          { id: 'li-18-1', text: 'Verificar dimensões finais (comprimento, largura, espessura)' },
+          { id: 'li-18-2', text: 'Inspecionar costura do fitilho (pontos soltos ou falhas)' },
+          { id: 'li-18-3', text: 'Validar densidade da espuma e alinhamento do tampo' },
+          { id: 'li-18-4', text: 'Rastrear o lote da matéria-prima de cola e tecido usada nesta OP' }
+        ],
+        tipText: 'Exemplo Prático: Um colchão com costura solta é detectado na inspeção final. Ele é marcado para Retrabalho.',
+        alertText: 'Erro Comum: Negligenciar o preenchimento real do checklist de qualidade, aprovando sem medir.',
+        moduleDetails: {
+          objetivo: 'Ensinar a prática de inspeções, refugo, retrabalho, checklists e não conformidades.',
+          conceitos: 'Inspeções garantem padrões. Checklists estruturados validam dimensões e costura. Retrabalho corrige; Refugo descarta.',
+          fluxoText: 'Fim da Operação → Aplicação de Checklist → Aprovado (Expede) ou Reprovado (Retrabalho / Refugo)',
+          exemploPratico: 'A inspeção final detecta costura solta. O colchão é reprovado e apontado como Retrabalho na costura.',
+          aplicacaoPlataforma: 'Configure checklists de qualidade obrigatórios para encerramento de OPs no Industrial OS.',
+          errosComuns: 'Preencher checklists de qualidade no automático sem realizar a aferição real do produto.',
+          resumo: 'Qualidade de excelência nasce de processos auditáveis, rastreabilidade de lote e aplicação rígida de checklists.',
+          quiz: [
+            {
+              question: 'Qual a diferença entre Refugo e Retrabalho?',
+              options: ['Refugo é descartado; Retrabalho é corrigido e aproveitado', 'Refugo é o produto bom; Retrabalho é descartado', 'Não há diferença entre os dois'],
+              correctIndex: 0,
+              explanation: 'Refugo representa perda total de material irrecuperável. Retrabalho é corrigido para salvar o item.'
+            }
+          ],
+          exercicioPratico: 'Crie um checklist com 5 pontos de checagem física para a embalagem e selagem de colchões.'
+        }
+      },
+      {
+        id: 'slide-4-19',
+        title: 'Módulo 18: Manutenção de Ativos',
+        subtitle: 'Garantindo Disponibilidade e Confiabilidade',
+        freeText: 'Máquinas quebram, e máquina parada é prejuízo certo. O Industrial OS apoia a transição da manutenção puramente reativa para planos periódicos preventivos e preditivos inteligentes.',
+        iconName: 'Hammer',
+        layout: 'two-columns',
+        listItems: [
+          { id: 'li-19-1', text: 'Manutenção Corretiva: Atuação rápida após a quebra para retomar produção' },
+          { id: 'li-19-2', text: 'Manutenção Preventiva: Lubrificação, limpeza e trocas de peças agendadas' },
+          { id: 'li-19-3', text: 'MTBF (Tempo Médio Entre Falhas): Queremos que o MTBF seja o maior possível' },
+          { id: 'li-19-4', text: 'MTTR (Tempo Médio Para Reparo): Queremos que o MTTR seja o menor possível' }
+        ],
+        tipText: 'Exemplo Prático: A serra de espuma possui um plano preventivo mensal de afiação de lâmina de aço.',
+        alertText: 'Erro Comum: Deixar de registrar pequenas paradas rápidas de manutenção corretiva.',
+        moduleDetails: {
+          objetivo: 'Explicar a gestão de ativos usando manutenções preventivas, corretivas e preditivas.',
+          conceitos: 'Preventiva evita paradas periódicas. Corretiva repara quebras. MTBF mede o tempo médio entre falhas (maior é melhor). MTTR é o tempo de reparo (menor é melhor).',
+          fluxoText: 'Cronômetro Horas Máquina → Alerta Preventiva → Parada Programada → Inspeção e Lubrificação',
+          exemploPratico: 'A serra de espuma tem preventivas mensais para afiação da fita de aço, evitando quebras inesperadas no turno.',
+          aplicacaoPlataforma: 'Cadastre as ordens de manutenção preventiva e registre os tempos de indisponibilidade das máquinas.',
+          errosComuns: 'Fazer apenas manutenções corretivas (quebra-repara), o que gera custos elevados e atrasos severos.',
+          resumo: 'Manutenções planejadas maximizam a disponibilidade física e a vida útil das máquinas.',
+          quiz: [
+            {
+              question: 'O que significa MTBF e qual a meta ideal para ele?',
+              options: ['Tempo Médio Entre Falhas; Meta é ser o maior possível', 'Tempo Médio de Reparo; Meta é ser menor', 'Medição do tempo de setup'],
+              correctIndex: 0,
+              explanation: 'MTBF (Mean Time Between Failures) é o tempo médio que a máquina roda sem quebrar. Queremos o maior intervalo possível.'
+            }
+          ],
+          exercicioPratico: 'Descreva uma tarefa de manutenção autônoma simples que o próprio operador pode fazer diariamente.'
+        }
+      },
+      {
+        id: 'slide-4-20',
+        title: 'Módulo 19: Planejamento & PCP',
+        subtitle: 'Calculando Necessidades e Otimizando Cargas',
+        freeText: 'O Planejamento e Controle da Produção (PCP) usa o algoritmo MRP (Material Requirements Planning) para analisar as OPs planejadas, verificar o estoque disponível de molas, tecidos e espumas, calcular as faltas e planejar as ordens de compra e de fabricação de forma sincronizada.',
+        imageUrl: '/assets/pcp.png',
+        iconName: 'Sliders',
+        layout: 'content',
+        tipText: 'Exemplo Prático: O cliente pede 100 colchões. O MRP analisa que já existem 20 tampos e planeja produzir 80.',
+        alertText: 'Erro Comum: Planejar a produção sem cruzar com a capacidade real de carga máquina dos centros.',
+        moduleDetails: {
+          objetivo: 'Apresentar as funções de planejamento, MRP, sequenciamento e carga máquina.',
+          conceitos: 'PCP gerencia a carga máquina frente à capacidade. MRP calcula o que comprar e fabricar cruzando BOM com pedidos.',
+          fluxoText: 'Pedido de Venda → MRP (Necessidades) → Carga Máquina (Capacidade) → Sequenciamento OPs',
+          exemploPratico: 'Pedido de 100 colchões. O MRP calcula que há 20 em estoque e gera OPs e requisições de tecidos apenas para os 80 faltantes.',
+          aplicacaoPlataforma: 'Rode o cálculo de MRP no Industrial OS para explodir as necessidades de compras e equilibrar as filas de CTs.',
+          errosComuns: 'Sequenciar OPs na linha sem conferir as datas de entrega ou as cargas de trabalho dos centros gargalos.',
+          resumo: 'PCP otimiza o fluxo de materiais e evita atrasos garantindo o balanceamento entre demanda e capacidade.',
+          quiz: [
+            {
+              question: 'Qual a função do algoritmo MRP (Material Requirements Planning)?',
+              options: ['Calcular as quantidades exatas de materiais a comprar e fabricar com base nas OPs', 'Gerenciar a folha de pagamento', 'Monitorar o MTTR das máquinas'],
+              correctIndex: 0,
+              explanation: 'O MRP realiza a explosão de necessidades de materiais com base na BOM e estoques.'
+            }
+          ],
+          exercicioPratico: 'Dada uma capacidade de 40 colchões/dia e uma demanda de 120 colchões, organize o plano de turnos semanais.'
+        }
+      },
+      {
+        id: 'slide-4-21',
+        title: 'Módulo 20: Custos Industriais',
+        subtitle: 'A Composição Exata do Valor do Produto',
+        freeText: 'Um gestor industrial precisa saber exatamente quanto custa cada minuto de operação e cada grama de material para garantir a lucratividade e competitividade da fábrica. No Industrial OS, os custos são divididos em várias categorias.',
+        iconName: 'TrendingUp',
+        layout: 'step-by-step',
+        listItems: [
+          { id: 'li-21-1', text: 'Matéria-Prima Direta: Custo de todos os insumos físicos consumidos na BOM' },
+          { id: 'li-21-2', text: 'Mão de Obra Direta (MOD): Custo do tempo gasto pelos operadores na linha' },
+          { id: 'li-21-3', text: 'Custos de Ativos: Depreciação das máquinas, energia elétrica consumida e manutenção' },
+          { id: 'li-21-4', text: 'Custos Indiretos (CIF): Aluguel do galpão, supervisores, pcp e administração' }
+        ],
+        tipText: 'Exemplo Prático: Um colchão custa R$ 250 de MP, R$ 30 de MOD e R$ 40 de custos indiretos. Total: R$ 320. Margem: R$ 180.',
+        alertText: 'Erro Comum: Ignorar as taxas de refugo e perdas invisíveis ao calcular os custos unitários.',
+        moduleDetails: {
+          objetivo: 'Explicar a composição de custos (Matéria-prima, MOD, Custos de ativos, CIF) e cálculo de margem.',
+          conceitos: 'Custo total = MP + Mão de Obra Direta + Custos Diretos de Máquinas + Custos Indiretos de Fabricação (CIF).',
+          fluxoText: 'MP Unitário + Tempo MOD (Minutos) + Taxa Máquina + Rateio CIF → Custo Total Colchão',
+          exemploPratico: 'Um colchão consome R$ 250 de MP, R$ 30 de MOD e R$ 40 de custos indiretos. Custo: R$ 320. Preço: R$ 500. Margem: R$ 180.',
+          aplicacaoPlataforma: 'Monitore a variação de custos de MP em tempo real e analise as margens de rentabilidade de cada linha.',
+          errosComuns: 'Desconsiderar o custo do refugo e do tempo de setup inativo ao compor o custo de fabricação.',
+          resumo: 'Saber o custo real de transformação é o único caminho seguro para definir preços e garantir rentabilidade.',
+          quiz: [
+            {
+              question: 'Quais os componentes do custo industrial de transformação?',
+              options: ['Matéria-Prima, Mão de Obra Direta (MOD) e Custos Indiretos (CIF)', 'Apenas o preço pago pelo tecido', 'Apenas as despesas de manutenção preventiva'],
+              correctIndex: 0,
+              explanation: 'O custo fabril engloba todos os insumos consumidos, a força de trabalho direta e as despesas operacionais da fábrica.'
+            }
+          ],
+          exercicioPratico: 'Simule la composição de custos de um colchão padrão listando MP, MOD e estimativa de custos adicionais.'
+        }
+      },
+      {
+        id: 'slide-4-22',
+        title: 'Módulo 21: Eficiência Global (OEE)',
+        subtitle: 'A Métrica Suprema do Desempenho Industrial',
+        freeText: 'O OEE (Overall Equipment Effectiveness) mede a eficiência global de um ativo. Ele responde a uma pergunta simples: De todo o tempo em que planejamos rodar, quanto realmente produzimos de forma útil e com qualidade? O OEE é calculado pelo produto de três fatores.',
+        imageUrl: '/assets/dashboard.png',
+        iconName: 'BarChart3',
+        layout: 'content',
+        tipText: 'Exemplo Prático: Disponibilidade (85%) x Performance (90%) x Qualidade (98%) = 75% OEE.',
+        alertText: 'Erro Comum: Achar que a fábrica está eficiente só porque está cheia de ordens de produção.',
+        moduleDetails: {
+          objetivo: 'Ensinar a métrica de desempenho industrial suprema (OEE).',
+          conceitos: 'OEE mede a eficiência global dos ativos: OEE = Disponibilidade × Performance × Qualidade. Padrão mundial é > 85%.',
+          fluxoText: 'Tempo Programado (100%) → Paradas (Disponibilidade) → Lerdeza (Performance) → Refugo (Qualidade) = OEE',
+          exemploPratico: 'Uma máquina roda 90% do tempo, a 90% da velocidade nominal, e gera 98% de peças aprovadas. OEE = 0.9 x 0.9 x 0.98 = 79.3%.',
+          aplicacaoPlataforma: 'Monitore os dashboards de OEE em tempo real alimentados diretamente pelos apontamentos dos operadores.',
+          errosComuns: 'Achar que a fábrica está eficiente só porque está movimentada, ocultando lentidão de máquinas ou alto refugo.',
+          resumo: 'OEE expõe as três grandes perdas industriais: tempo parado, velocidade reduzida e falhas de qualidade.',
+          quiz: [
+            {
+              question: 'Como é calculado o OEE?',
+              options: ['Multiplicando os fatores de Disponibilidade, Performance e Qualidade', 'Somando as horas extras do turno', 'Dividindo a capacidade nominal pelas horas de manutenção'],
+              correctIndex: 0,
+              explanation: 'O OEE é o produto dos três índices percentuais, refletindo a eficiência real e total.'
+            }
+          ],
+          exercicioPratico: 'Calcule o OEE de um turno: Disponibilidade de 90%, Performance de 85% e Qualidade de 95%.'
+        }
+      },
+      {
+        id: 'slide-4-23',
+        title: 'Módulo 22: Inteligência Artificial Industrial',
+        subtitle: 'O Copilot IA como Overlay de Decisão',
+        freeText: 'A inteligência artificial industrial do Industrial OS não cria ou inventa informações. Ela atua como um "overlay" inteligente analisando os seus dados de BOM, tempos de cronometragem, histórico de qualidade, PCP e índices de manutenção para sugerir planos otimizados.',
         imageUrl: '/assets/dashboard-mature.png',
         iconName: 'Sparkles',
-        layout: 'hero'
+        layout: 'content',
+        tipText: 'Exemplo Prático: O Copilot analisa os últimos 10 lotes e alerta: "Setor de Costura perde 15% de eficiência às sextas-feiras após as 15:00. Sugiro balanceamento."',
+        alertText: 'Erro Comum: Esperar que o Copilot resolva gargalos se o chão de fábrica não realizar apontamentos diários corretos.',
+        moduleDetails: {
+          objetivo: 'Explicar como o Copilot IA interpreta dados para sugerir ações.',
+          conceitos: 'A IA não inventa dados; ela interpreta BOM, tempos, apontamentos e qualidade para gerar previsões de atrasos e recomendações.',
+          fluxoText: 'Bando de Dados Industrial OS → Análise Padrões IA → Geração de Recomendações → Decisão do Gestor',
+          exemploPratico: 'O Copilot analisa paradas e alerta: "Setor de Costura perde 15% de eficiência às sextas à tarde. Recomendo balanceamento."',
+          aplicacaoPlataforma: 'Acesse o chat integrado do Copilot em cada tela para pedir relatórios, diagnósticos e simulações.',
+          errosComuns: 'Esperar que a IA traga soluções milagrosas se a fábrica não realiza os apontamentos diários corretos.',
+          resumo: 'O Copilot Industrial é um copiloto de decisão estratégica alimentado pela precisão do seu chão de fábrica.',
+          quiz: [
+            {
+              question: 'Qual a regra de ouro para a inteligência artificial industrial funcionar?',
+              options: ['Depende 100% da precisão e disciplina dos apontamentos de campo', 'Ela funciona sozinha sem dados', 'Basta ligar o compressor de ar'],
+              correctIndex: 0,
+              explanation: 'Sem dados reais e confiáveis cadastrados e apontados, as análises da IA perdem o sentido (conceito de Garbage In, Garbage Out).'
+            }
+          ],
+          exercicioPratico: 'Escreva uma pergunta simulada que você faria ao Copilot sobre gargalos no setor de corte.'
+        }
+      },
+      {
+        id: 'slide-4-24',
+        title: 'Resumo Geral do Aprendizado',
+        subtitle: 'A Jornada de Maturidade Industrial',
+        freeText: 'Parabéns por concluir a trilha de capacitação! Agora você detém os conceitos teóricos de engenharia e compreende como o Industrial OS representa cada elemento físico e lógico da fábrica. Vamos verificar se tudo foi consolidado:',
+        iconName: 'CheckSquare',
+        layout: 'checklist',
+        listItems: [
+          { id: 'li-24-1', text: 'Entendo que a fábrica física (Unidades, Galpões, Setores, Máquinas) precede o sistema' },
+          { id: 'li-24-2', text: 'Compreendo a diferença entre Matéria-Prima (comprada) e Componente (produzido)' },
+          { id: 'li-24-3', text: 'Sei que a BOM (Lista de Materiais) e os Roteiros com Tempos Cronometrados guiam o PCP' },
+          { id: 'li-24-4', text: 'Compreendo que apontar paradas, setup e refugo garante a precisão dos custos e do OEE' }
+        ],
+        tipText: 'Dica de Sucesso: Inicie a implantação gradualmente. Cadastre primeiro a estrutura, depois os recursos e insumos, e só então lance as ordens de produção.',
+        alertText: 'Atenção: A precisão do Industrial OS depende da disciplina diária de cada operador no chão de fábrica.',
+        highlightText: 'Avaliação Final: Realize o exercício de simulação completo no cockpit para obter sua certificação de Especialista em Industrial OS.'
+      },
+      {
+        id: 'slide-4-25',
+        title: 'Trilha Concluída com Sucesso!',
+        subtitle: 'Pronto para Operar o Cockpit Industrial',
+        freeText: 'Você cruzou a linha de chegada de forma espetacular. Agora, você domina as ferramentas necessárias para sincronizar o chão de fábrica, reduzir perdas, otimizar capacidades e liderar a transformação com o apoio da Inteligência Artificial do Industrial OS!\n\nSeu certificado foi emitido e registrado no seu perfil de usuário.',
+        iconName: 'Award',
+        layout: 'conclusion'
       }
     ]
   }

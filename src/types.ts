@@ -37,6 +37,25 @@ export type SlideLayout =
   | 'video'
   | 'flow';
 
+export interface TrainingQuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface ModuleDetails {
+  objetivo: string;
+  conceitos: string;
+  fluxoText?: string;
+  exemploPratico: string;
+  aplicacaoPlataforma: string;
+  errosComuns: string;
+  resumo: string;
+  quiz: TrainingQuizQuestion[];
+  exercicioPratico: string;
+}
+
 export interface Slide {
   id: string;
   title: string;
@@ -52,6 +71,7 @@ export interface Slide {
   tipText?: string;
   highlightText?: string;
   flowNodes?: FlowNode[]; // Used for Flow, Timeline, Process representations
+  moduleDetails?: ModuleDetails; // Rich interactive training sections
 }
 
 export type ThemeColor = 'yellow' | 'green' | 'red' | 'cyan' | 'purple';

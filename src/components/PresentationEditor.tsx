@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Presentation, Slide, Category, Status, MediaAsset, ListItem, ThemeStyle } from '../types';
 import { CATEGORIES } from '../mockData';
 import LayoutLibrary from './LayoutLibrary';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Save, Eye, ArrowLeft, Trash2, Plus, MoveUp, MoveDown, Layout, 
   Image as ImageIcon, Video, AlignLeft, ListPlus, AlertCircle, 
@@ -47,6 +48,18 @@ export default function PresentationEditor({
 
   // Auto-saved tracking indicator
   const [saveIndicator, setSaveIndicator] = useState<'saved' | 'saving' | 'dirty'>('saved');
+
+  // Custom inline modals
+  const [localConfirm, setLocalConfirm] = useState<{
+    title: string;
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
+
+  const [localAlert, setLocalAlert] = useState<{
+    title: string;
+    message: string;
+  } | null>(null);
 
   // Media picker modal helpers
   const [mediaPickerTarget, setMediaPickerTarget] = useState<'image' | 'video' | null>(null);
@@ -116,18 +129,27 @@ export default function PresentationEditor({
   const handleDeleteSlide = (slideId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (slides.length <= 1) {
-      alert('Sua apresentação de treinamento necessita de no mínimo 1 slide operacional.');
+      setLocalAlert({
+        title: 'Limite Crítico do Circuito',
+        message: 'Sua apresentação de treinamento necessita de no mínimo 1 slide operacional para manter a consistência da instrução de trabalho.'
+      });
       return;
     }
-    if (confirm('Deseja excluir permanentemente este slide do circuito?')) {
-      const nextList = slides.filter(s => s.id !== slideId);
-      setSlides(nextList);
-      
-      if (activeSlideId === slideId) {
-        setActiveSlideId(nextList[0]?.id || '');
+
+    setLocalConfirm({
+      title: 'Excluir Slide do Circuito',
+      message: 'Deseja excluir permanentemente este slide do circuito operacional de treinamento?',
+      onConfirm: () => {
+        const nextList = slides.filter(s => s.id !== slideId);
+        setSlides(nextList);
+        
+        if (activeSlideId === slideId) {
+          setActiveSlideId(nextList[0]?.id || '');
+        }
+        setSaveIndicator('dirty');
+        setLocalConfirm(null);
       }
-      setSaveIndicator('dirty');
-    }
+    });
   };
 
   const handleDuplicateSlide = (slideId: string, e: React.MouseEvent) => {
@@ -931,6 +953,90 @@ export default function PresentationEditor({
           </div>
         </div>
       )}
+
+      {/* LOCAL CONFIRMATION OVERLAY */}
+      <AnimatePresence>
+        {localConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs select-none">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="w-full max-w-sm p-6 rounded-xl border border-red-500/20 bg-[#121214] shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-red-500" />
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-red-950/40 rounded border border-red-900/30 text-red-400 shrink-0">
+                  <AlertTriangle className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-extrabold text-white uppercase font-mono tracking-wider">
+                    {localConfirm.title}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-1.5 font-sans leading-relaxed">
+                    {localConfirm.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2.5 mt-5">
+                <button
+                  onClick={() => setLocalConfirm(null)}
+                  className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-850 text-slate-400 border border-slate-800 text-[10.5px] font-mono font-bold rounded-lg transition cursor-pointer uppercase"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={localConfirm.onConfirm}
+                  className="px-3.5 py-1.5 bg-red-600 hover:bg-red-550 text-white text-[10.5px] font-mono font-bold rounded-lg transition cursor-pointer uppercase shadow-md shadow-red-950/20"
+                >
+                  Confirmar
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* LOCAL ALERT OVERLAY */}
+      <AnimatePresence>
+        {localAlert && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs select-none">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.15, ease: 'easeOut' }}
+              className="w-full max-w-sm p-6 rounded-xl border border-yellow-500/20 bg-[#121214] shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 bg-yellow-500" />
+              <div className="flex items-start gap-3">
+                <div className="p-1.5 bg-yellow-950/40 rounded border border-yellow-900/30 text-yellow-400 shrink-0">
+                  <AlertCircle className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <h3 className="text-xs font-extrabold text-white uppercase font-mono tracking-wider">
+                    {localAlert.title}
+                  </h3>
+                  <p className="text-[11px] text-slate-400 mt-1.5 font-sans leading-relaxed">
+                    {localAlert.message}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end mt-5">
+                <button
+                  onClick={() => setLocalAlert(null)}
+                  className="px-4 py-1.5 bg-yellow-400 hover:bg-yellow-350 text-black text-[10.5px] font-mono font-black rounded-lg transition cursor-pointer uppercase"
+                >
+                  Entendi
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
