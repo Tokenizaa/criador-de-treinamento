@@ -166,6 +166,15 @@ export default function App() {
     }
   };
 
+  if (activeView === 'presenter' && activePresentation) {
+    return (
+      <PresenterMode
+        presentation={activePresentation}
+        onExit={() => setActiveView('editor')}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen ${currentTheme.bgGlobal} ${currentTheme.textBody} ${currentTheme.fontBody} flex flex-col transition-colors duration-300 relative`}>
       {/* Dynamic Background Pattern Overlay */}
@@ -244,13 +253,6 @@ export default function App() {
             onExport={() => setIsExporting(true)}
             mediaList={mediaList}
             onOpenMediaLibrary={() => setActiveView('medialibrary')}
-          />
-        )}
-
-        {activeView === 'presenter' && activePresentation && (
-          <PresenterMode
-            presentation={activePresentation}
-            onExit={() => setActiveView('editor')}
           />
         )}
 

@@ -25,6 +25,65 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
   // Interactive checklist state map
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
+  // Slide dimensions state to enforce strict 16:9 aspect ratio inside the flexible viewport
+  const [slideDimensions, setSlideDimensions] = useState({ width: 800, height: 450 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      const parent = containerRef.current;
+      if (!parent) return;
+      
+      const rect = parent.getBoundingClientRect();
+      const parentWidth = rect.width;
+      const parentHeight = rect.height;
+      
+      if (parentWidth <= 0 || parentHeight <= 0) return;
+      
+      const targetRatio = 16 / 9;
+      const currentRatio = parentWidth / parentHeight;
+      
+      let width = 0;
+      let height = 0;
+      
+      if (currentRatio > targetRatio) {
+        // Parent container is wider than 16:9, fit to height
+        height = parentHeight;
+        width = parentHeight * targetRatio;
+      } else {
+        // Parent container is taller than 16:9, fit to width
+        width = parentWidth;
+        height = parentWidth / targetRatio;
+      }
+      
+      // Keep within parent container size constraints
+      setSlideDimensions({ 
+        width: Math.floor(width), 
+        height: Math.floor(height) 
+      });
+    };
+
+    const observer = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+    
+    // Initial calculation
+    handleResize();
+    // Safety timeout to wait for actual layout paint
+    const timer = setTimeout(handleResize, 100);
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      clearTimeout(timer);
+      observer.disconnect();
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   // References to points for scrolling support on small views
   const pointRefs = useRef<React.RefObject<HTMLDivElement | null>[]>([]);
 
@@ -148,7 +207,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
         if (pointRefs.current[nextStep - 1]?.current) {
           pointRefs.current[nextStep - 1].current?.scrollIntoView({
             behavior: 'smooth',
-            block: 'center'
+            block: 'nearest'
           });
         }
       }, 60);
@@ -230,9 +289,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
 
   return (
     <div 
-      className={`min-h-screen ${theme.bgGlobal} ${theme.textBody} flex flex-col transition-all duration-300 relative overflow-hidden select-none ${
-        isFullscreen ? 'fixed inset-0 z-50 p-4' : `relative ${theme.roundedSlide} border ${theme.borderColor} ${theme.shadowGlowHeavy} p-4 md:p-6`
-      }`}
+      className={`w-screen h-screen ${theme.bgGlobal} ${theme.textBody} flex flex-col transition-all duration-300 relative overflow-hidden select-none p-4 md:p-6 pb-2`}
       id="presenter-mode-container"
       style={{
         // Inject runtime CSS variables mapping the selected accent color!
@@ -337,6 +394,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
 
       {/* Main Slide / Index Content Frame (Scrollable) */}
       <div 
+        ref={containerRef}
         onClick={(e) => {
           // Exclude direct button/link clicks inside the slide
           const target = e.target as HTMLElement;
@@ -345,7 +403,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
           }
           handleNext();
         }}
-        className="flex-grow flex relative items-center justify-center py-4 md:py-6 min-h-[460px] max-h-[75vh] overflow-y-auto cursor-pointer select-none relative z-10"
+        className="flex-1 min-h-0 w-full flex relative items-center justify-center py-2 md:py-4 cursor-pointer select-none relative z-10"
         title="Clique na tela para abrir o próximo tópico"
       >
         
@@ -415,73 +473,79 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
           /* ========================================================== */
           /* LAYOUT CAPA (COVER)                                        */
           /* ========================================================== */
-          <div className={`${theme.bgCard} border ${theme.borderColor} p-6 md:p-10 rounded-2xl shadow-2xl hover:border-slate-800 transition duration-300 animate-fadeIn relative overflow-hidden flex flex-col items-center text-center max-w-3xl w-full`}>
-            
-            {/* Checker/Badge representing target category */}
-            <div 
-              className={`w-14 h-14 rounded-full bg-[#050505] border flex items-center justify-center mb-6 animate-pulse`}
-              style={{ borderColor: activeAccentColor, boxShadow: `0 0 15px ${activeAccentColor}` }}
-            >
-              <Flag className="w-7 h-7" style={{ color: activeAccentColor }} />
-            </div>
-
-            <span 
-              className={`text-[9px] font-black ${theme.fontMono} tracking-widest uppercase mb-1`}
-              style={{ color: activeAccentColor }}
-            >
-              CIRCULO DE TREINAMENTO SPRINT ALL-IN
-            </span>
-
-            {/* Title with dynamic slanted design backing */}
-            <div className={`relative inline-block mb-4 select-none ${theme.skewAngle}`}>
-              <div 
-                className="absolute inset-0 opacity-100" 
-                style={{ backgroundColor: activeAccentColor, boxShadow: `0 0 20px ${activeAccentColor}` }}
-              />
-              <h1 className={`relative text-2xl md:text-4xl font-black italic text-black px-6 py-2.5 uppercase leading-tight ${theme.unskewAngle}`}>
-                {presentation.title}
-              </h1>
-            </div>
-
-            <p className="text-slate-300 text-xs md:text-sm max-w-lg leading-relaxed mt-2 font-medium">
-              {presentation.description}
-            </p>
-
-            <div className={`h-px ${theme.borderColor} w-full my-6`} />
-
-            {/* Grid layout of procedures (Index agenda) */}
-            <div className="w-full text-left mb-6 no-screen-click">
-              <h3 className={`text-[10px] font-mono font-bold tracking-wider uppercase ${theme.textMuted} mb-3 flex items-center gap-1.5`}>
-                <Layers className="w-3.5 h-3.5" style={{ color: activeAccentColor }} /> Grid Operacional de Aprendizado
-              </h3>
+          <div 
+            style={{ width: slideDimensions.width, height: slideDimensions.height }}
+            className={`${theme.bgCard} border ${theme.borderColor} p-4 md:p-6 rounded-2xl shadow-2xl hover:border-slate-800 transition duration-300 animate-fadeIn relative overflow-hidden flex flex-col justify-between`}
+          >
+            {/* Scrollable Center Content area inside Slide bounds */}
+            <div className="flex-grow min-h-0 overflow-y-auto w-full flex flex-col items-center justify-start py-2 pr-1 select-none">
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {presentation.slides.map((slide, index) => (
-                  <button
-                    key={slide.id}
-                    onClick={() => jumpToSlide(index)}
-                    className={`group flex items-start gap-3 p-2.5 bg-black/40 hover:bg-black/80 border ${theme.borderColor} rounded-xl transition-all text-left cursor-pointer duration-200`}
-                    style={{ ['--hover-border-color' as any]: activeAccentColor }}
-                  >
-                    <div 
-                      className={`w-7 h-7 rounded bg-[#121214] flex items-center justify-center text-slate-350 font-mono text-xs font-bold transition-all shrink-0`}
-                      style={{ border: `1px solid ${theme.borderColor}` }}
+              {/* Checker/Badge representing target category */}
+              <div 
+                className={`w-12 h-12 rounded-full bg-[#050505] border flex items-center justify-center mb-4 animate-pulse shrink-0`}
+                style={{ borderColor: activeAccentColor, boxShadow: `0 0 15px ${activeAccentColor}` }}
+              >
+                <Flag className="w-5.5 h-5.5" style={{ color: activeAccentColor }} />
+              </div>
+
+              <span 
+                className={`text-[8px] font-black ${theme.fontMono} tracking-widest uppercase mb-1 shrink-0`}
+                style={{ color: activeAccentColor }}
+              >
+                CIRCULO DE TREINAMENTO SPRINT ALL-IN
+              </span>
+
+              {/* Title with dynamic slanted design backing */}
+              <div className={`relative inline-block mb-3 select-none ${theme.skewAngle} shrink-0`}>
+                <div 
+                  className="absolute inset-0 opacity-100" 
+                  style={{ backgroundColor: activeAccentColor, boxShadow: `0 0 20px ${activeAccentColor}` }}
+                />
+                <h1 className={`relative text-xl md:text-2.5xl font-black italic text-black px-5 py-2 uppercase leading-tight ${theme.unskewAngle}`}>
+                  {presentation.title}
+                </h1>
+              </div>
+
+              <p className="text-slate-350 text-xs max-w-lg leading-relaxed mt-1 font-medium text-center shrink-0">
+                {presentation.description}
+              </p>
+
+              <div className={`h-px ${theme.borderColor} w-full my-4 shrink-0`} />
+
+              {/* Grid layout of procedures (Index agenda) */}
+              <div className="w-full text-left mb-4 no-screen-click shrink-0">
+                <h3 className={`text-[10px] font-mono font-bold tracking-wider uppercase ${theme.textMuted} mb-2.5 flex items-center gap-1.5`}>
+                  <Layers className="w-3.5 h-3.5" style={{ color: activeAccentColor }} /> Grid Operacional de Aprendizado
+                </h3>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {presentation.slides.map((slide, index) => (
+                    <button
+                      key={slide.id}
+                      onClick={() => jumpToSlide(index)}
+                      className={`group flex items-start gap-2.5 p-2 bg-black/40 hover:bg-black/80 border ${theme.borderColor} rounded-xl transition-all text-left cursor-pointer duration-200`}
+                      style={{ ['--hover-border-color' as any]: activeAccentColor }}
                     >
-                      {index + 1}
-                    </div>
-                    <div className="min-w-0 flex-grow">
-                      <span className="text-[8px] text-slate-500 font-mono uppercase block">LAP 0{index + 1}</span>
-                      <p className="text-slate-200 group-hover:text-white font-bold text-xs truncate mt-0.5" title={slide.title}>
-                        {slide.title}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                      <div 
+                        className={`w-6.5 h-6.5 rounded bg-[#121214] flex items-center justify-center text-slate-350 font-mono text-xs font-bold transition-all shrink-0`}
+                        style={{ border: `1px solid ${theme.borderColor}` }}
+                      >
+                        {index + 1}
+                      </div>
+                      <div className="min-w-0 flex-grow">
+                        <span className="text-[8px] text-slate-500 font-mono uppercase block">LAP 0{index + 1}</span>
+                        <p className="text-slate-200 group-hover:text-white font-bold text-[11px] truncate mt-0.5" title={slide.title}>
+                          {slide.title}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             <div 
-              className={`mt-2 animate-pulse text-[10px] ${theme.fontMono} tracking-wider font-bold`}
+              className={`mt-2 shrink-0 animate-pulse text-[10px] ${theme.fontMono} tracking-wider font-bold text-center`}
               style={{ color: activeAccentColor }}
             >
               ⚡ PRESSIONE ESPAÇO OU CLIQUE NA TELA PARA INICIAR O COCKPIT ⚡
@@ -491,25 +555,28 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
           /* ========================================================== */
           /* ACTIVE SLIDE VIEWER RENDER                                 */
           /* ========================================================== */
-          <div className={`max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8 items-center ${theme.bgCard} border ${theme.borderColor} p-5 md:p-8 rounded-2xl shadow-xl relative overflow-hidden backdrop-blur-sm`}>
+          <div 
+            style={{ width: slideDimensions.width, height: slideDimensions.height }}
+            className={`flex flex-col justify-between ${theme.bgCard} border ${theme.borderColor} p-6 md:p-8 rounded-2xl shadow-xl relative overflow-hidden backdrop-blur-sm`}
+          >
             
             {/* Standard Upper Section: Presenter metadata */}
-            <div className="md:col-span-12 flex items-center justify-between pb-3 border-b border-white/5">
-              <span className={`text-[9px] font-black ${theme.fontMono} tracking-wider`} style={{ color: activeAccentColor }}>
+            <div className="flex items-center justify-between pb-3 border-b border-white/5 shrink-0 select-none">
+              <span className={`text-[10px] font-black ${theme.fontMono} tracking-widest`} style={{ color: activeAccentColor }}>
                 MÓDULO DE PROCEDIMENTO OPERACIONAL SPRINT {currentSlideIndex + 1} DE {presentation.slides.length}
               </span>
-              <span className="font-mono text-[8px] opacity-60 bg-black/45 border border-white/5 text-slate-400 px-2.5 py-0.5 rounded uppercase">
+              <span className="font-mono text-[9px] font-bold opacity-75 bg-black/45 border border-white/5 text-slate-400 px-3 py-1 rounded uppercase tracking-widest">
                 LAYOUT: {currentLayoutType}
               </span>
             </div>
 
-            {/* Asymmetric Header details */}
-            <div className="md:col-span-12 border-l-4 pl-4 py-1 flex flex-col" style={{ borderLeftColor: activeAccentColor }}>
-              <h1 className="text-xl md:text-3xl font-black italic uppercase text-white tracking-tight">
+            {/* Asymmetric Header details - ENHANCED SIZE AND TRACKING */}
+            <div className="border-l-4 pl-4 py-1.5 flex flex-col shrink-0 mt-3" style={{ borderLeftColor: activeAccentColor }}>
+              <h1 className="text-2xl md:text-4xl lg:text-5xl font-black italic uppercase text-white tracking-widest leading-none">
                 {activeSlide?.title}
               </h1>
               {activeSlide?.subtitle && (
-                <p className={`text-xs font-mono tracking-tight font-bold mt-1`} style={{ color: activeAccentColor }}>
+                <p className="text-xs md:text-sm font-mono tracking-widest font-black uppercase mt-1" style={{ color: activeAccentColor }}>
                   {activeSlide?.subtitle}
                 </p>
               )}
@@ -519,26 +586,40 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
             {/* COMPONENT: TÓPICOS / REVELAÇÃO PROGRESSIVA DETALHADOS    */}
             {/* ======================================================== */}
             
-            {/* Layout Case: COVER                                      */}
+            {/* Scrollable Content Viewport container */}
+            <div className="flex-grow min-h-0 overflow-y-auto py-4 pr-1 w-full flex flex-col justify-center">
+            
+            {/* Layout Case: COVER - REDESIGNED BEAUTIFULLY WITH LARGE TEXTS */}
             {currentLayoutType === 'cover' && (
-              <div className="md:col-span-12 text-center py-6 flex flex-col items-center max-w-xl mx-auto space-y-4">
-                <Sparkles className="w-12 h-12 animate-spin" style={{ color: activeAccentColor }} />
-                <h3 className="text-lg font-bold uppercase font-display text-white">Grid do Slide de Capa</h3>
-                <p className="text-slate-400 text-xs">Página de Introdução do operador.</p>
+              <div className="md:col-span-12 text-center py-6 flex flex-col items-center justify-center max-w-3xl mx-auto space-y-6">
+                <Sparkles className="w-14 h-14 animate-bounce" style={{ color: activeAccentColor }} />
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black italic uppercase text-white tracking-widest leading-none font-sans">
+                  {activeSlide?.title || 'Título de Capa'}
+                </h2>
+                {activeSlide?.subtitle && (
+                  <p className="text-xs md:text-sm lg:text-base font-mono font-black uppercase tracking-widest px-4 py-1.5 bg-white/5 border border-white/10 rounded-full" style={{ color: activeAccentColor }}>
+                    {activeSlide.subtitle}
+                  </p>
+                )}
+                {activeSlide?.freeText && (
+                  <p className="text-base md:text-xl lg:text-2xl text-slate-300 font-sans tracking-wide leading-relaxed text-center">
+                    {activeSlide.freeText}
+                  </p>
+                )}
               </div>
             )}
 
-            {/* Layout Case: CONTENT (TEXT CARDS CORRIDO)                 */}
+            {/* Layout Case: CONTENT (TEXT CARDS CORRIDO) - LARGER READABLE FONTS */}
             {currentLayoutType === 'content' && (
-              <div className="md:col-span-12 space-y-4">
+              <div className="md:col-span-12 space-y-6">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-200 text-xs md:text-sm leading-relaxed whitespace-pre-line bg-black/20 p-4 border border-white/5 rounded-xl">
+                  <p className="text-slate-100 text-sm md:text-lg lg:text-2xl leading-relaxed whitespace-pre-line bg-black/35 p-6 border border-white/5 rounded-xl tracking-wide font-medium font-sans">
                     {activeSlide.freeText}
                   </p>
                 )}
                 
                 {/* Visual support images or videos in side column if loaded */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {activeSlide?.imageUrl && (
                     <div className="aspect-video bg-slate-900 border border-white/5 rounded-xl overflow-hidden relative shadow-md">
                       <img src={activeSlide.imageUrl} referrerPolicy="no-referrer" alt="Support image layout" className="w-full h-full object-cover" />
@@ -553,35 +634,35 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               </div>
             )}
 
-            {/* Layout Case: STEP-BY-STEP (PASSO A PASSO PROGRESSIVE)     */}
+            {/* Layout Case: STEP-BY-STEP (PASSO A PASSO PROGRESSIVE) - HIGH LEGIBILITY TEXT */}
             {currentLayoutType === 'step-by-step' && (
               <div className={`grid grid-cols-1 ${activeSlide?.imageUrl || activeSlide?.videoUrl ? 'md:grid-cols-12' : 'md:grid-cols-1'} gap-6 md:col-span-12 w-full`}>
-                <div className={`${activeSlide?.imageUrl || activeSlide?.videoUrl ? 'md:col-span-7' : ''} space-y-4`}>
+                <div className={`${activeSlide?.imageUrl || activeSlide?.videoUrl ? 'md:col-span-7' : ''} space-y-5`}>
                   {activeSlide?.freeText && (
-                    <p className="text-slate-350 text-xs leading-relaxed whitespace-pre-line">
+                    <p className="text-slate-300 text-sm md:text-lg leading-relaxed whitespace-pre-line font-medium tracking-wide">
                       {activeSlide.freeText}
                     </p>
                   )}
 
                   {activeSlide?.listItems && activeSlide.listItems.length > 0 && (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {activeSlide.listItems.slice(0, currentStep).map((item, idx) => {
                         const itemRef = pointRefs.current[idx];
                         return (
                           <div 
                             key={item.id} 
                             ref={itemRef as any}
-                            className={`flex items-start gap-4 p-4 rounded-xl border ${theme.borderColor} bg-gradient-to-r from-black/40 to-black/10 group transition-all duration-300 border-l-4 animate-fadeIn`}
+                            className={`flex items-center gap-4.5 p-5 rounded-xl border ${theme.borderColor} bg-gradient-to-r from-black/50 to-black/10 group transition-all duration-300 border-l-4 animate-fadeIn shadow-sm`}
                             style={{ borderLeftColor: activeAccentColor }}
                           >
                             <div 
-                              className={`w-6 h-6 rounded shrink-0 flex items-center justify-center font-mono text-[10px] font-black text-black`}
+                              className="w-10 h-10 rounded-full shrink-0 flex items-center justify-center font-mono text-base font-black text-black"
                               style={{ backgroundColor: activeAccentColor }}
                             >
                               <span>{idx + 1}</span>
                             </div>
                             <div className="min-w-0 flex-grow pr-2">
-                              <p className="text-slate-200 leading-normal text-xs font-semibold">{item.text}</p>
+                              <p className="text-slate-100 leading-normal text-base md:text-lg lg:text-xl font-bold tracking-wide font-sans">{item.text}</p>
                             </div>
                           </div>
                         );
@@ -594,15 +675,15 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                 {(activeSlide?.imageUrl || activeSlide?.videoUrl) && (
                   <div className="md:col-span-5 flex items-center justify-center">
                     {activeSlide?.videoUrl ? (
-                      <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-white/5 relative z-10 shadow-lg">
+                      <div className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-white/5 relative z-10 shadow-lg animate-fadeIn">
                         <video src={activeSlide.videoUrl} controls className="w-full h-full object-cover" autoPlay muted loop />
                       </div>
                     ) : (
                       activeSlide?.imageUrl && (
-                        <div className="w-full aspect-video md:aspect-square bg-slate-950 rounded-xl overflow-hidden border border-white/5 relative z-10 shadow-lg group">
+                        <div className="w-full aspect-video md:aspect-square bg-slate-950 rounded-xl overflow-hidden border border-white/5 relative z-10 shadow-lg group animate-fadeIn">
                           <img src={activeSlide.imageUrl} alt="Procedural graphics" referrerPolicy="no-referrer" className="w-full h-full object-cover group-hover:scale-102 transition duration-500" />
                           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pointer-events-none">
-                            <span className="text-[9px] text-slate-400 font-mono">SUPORTE VISUAL DE TRABALHO</span>
+                            <span className="text-[10px] text-slate-350 font-mono tracking-widest uppercase">SUPORTE VISUAL DE TRABALHO</span>
                           </div>
                         </div>
                       )
@@ -612,33 +693,33 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               </div>
             )}
 
-            {/* Layout Case: TWO-COLUMNS (DUAS COLUNAS BENTO GRID)     */}
+            {/* Layout Case: TWO-COLUMNS (DUAS COLUNAS BENTO GRID) - ENHANCED BOLD TEXT */}
             {currentLayoutType === 'two-columns' && (
-              <div className="md:col-span-12 space-y-4">
+              <div className="md:col-span-12 space-y-5">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-350 text-xs leading-relaxed bg-black/10 p-3 rounded">
+                  <p className="text-slate-300 text-sm md:text-lg leading-relaxed bg-black/10 p-4 rounded-xl tracking-wide font-medium">
                     {activeSlide.freeText}
                   </p>
                 )}
 
                 {activeSlide?.listItems && activeSlide.listItems.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 select-none">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 select-none">
                     {activeSlide.listItems.slice(0, currentStep).map((item, idx) => {
                       const itemRef = pointRefs.current[idx];
                       return (
                         <div 
                           key={item.id} 
                           ref={itemRef as any}
-                          className={`relative p-4 rounded-xl border ${theme.borderColor} bg-black/30 hover:bg-black/60 transition-all duration-300 flex flex-col justify-between min-h-[110px] animate-fadeIn group`}
+                          className={`relative p-5 rounded-xl border ${theme.borderColor} bg-black/40 hover:bg-black/65 transition-all duration-300 flex flex-col justify-between min-h-[140px] animate-fadeIn group`}
                         >
-                          <div className="absolute right-4 bottom-1 text-6xl font-black italic select-none text-white/5 font-display transition-all group-hover:scale-110 pointer-events-none">
+                          <div className="absolute right-4 bottom-1 text-7xl md:text-8xl font-black italic select-none text-white/5 font-display transition-all group-hover:scale-110 pointer-events-none">
                             0{idx + 1}
                           </div>
-                          <div className="space-y-1 relative z-10">
-                            <span className="text-[8px] font-mono tracking-wider font-bold uppercase" style={{ color: activeAccentColor }}>
+                          <div className="space-y-2 relative z-10">
+                            <span className="text-[10px] font-mono tracking-widest font-bold uppercase" style={{ color: activeAccentColor }}>
                               INDICADOR INTEGRADO 0{idx + 1}
                             </span>
-                            <p className="text-slate-205 text-xs font-semibold leading-relaxed pr-8">
+                            <p className="text-slate-100 text-base md:text-lg lg:text-xl font-bold leading-relaxed pr-8 tracking-wide font-sans">
                               {item.text}
                             </p>
                           </div>
@@ -652,16 +733,16 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               </div>
             )}
 
-            {/* Layout Case: CHECKLIST INTERATIVA (INTERACTIVE CHECKLIST) */}
+            {/* Layout Case: CHECKLIST INTERATIVA (INTERACTIVE CHECKLIST) - MASSIVE TOUCH TARGETS */}
             {currentLayoutType === 'checklist' && (
-              <div className="md:col-span-12 space-y-4 no-screen-click">
+              <div className="md:col-span-12 space-y-5 no-screen-click">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-350 text-xs bg-black/20 p-3.5 border border-white/5 rounded-lg">
+                  <p className="text-slate-305 text-sm md:text-lg bg-black/25 p-4 border border-white/5 rounded-xl font-medium tracking-wide leading-relaxed">
                     {activeSlide.freeText}
                   </p>
                 )}
 
-                <div className="grid grid-cols-1 gap-2.5">
+                <div className="grid grid-cols-1 gap-3.5">
                   {activeSlide?.listItems?.slice(0, currentStep).map((item, idx) => {
                     const isChecked = !!checkedItems[item.id];
                     const itemRef = pointRefs.current[idx];
@@ -670,31 +751,28 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                         key={item.id}
                         ref={itemRef as any}
                         onClick={(e) => toggleChecklist(item.id, e)}
-                        className={`flex items-start gap-3.5 p-4 rounded-xl border cursor-pointer select-none transition-all duration-200 animate-fadeIn ${
+                        className={`flex items-center gap-4.5 p-5 rounded-xl border cursor-pointer select-none transition-all duration-200 animate-fadeIn ${
                           isChecked 
-                            ? 'bg-emerald-950/20 border-emerald-500/30 text-slate-200 shadow-sm' 
-                            : `bg-black/40 hover:bg-black/60 ${theme.borderColor}`
+                            ? 'bg-emerald-950/35 border-emerald-500/40 text-slate-100 shadow-sm' 
+                            : `bg-black/45 hover:bg-black/65 ${theme.borderColor}`
                         }`}
                       >
-                        <button 
-                          type="button"
-                          className="mt-0.5 shrink-0 transition hover:scale-110"
-                        >
+                        <div className="shrink-0 transition hover:scale-110">
                           {isChecked ? (
-                            <CheckSquare className="w-5 h-5 text-emerald-400 stroke-[2.5]" />
+                            <CheckSquare className="w-7 h-7 text-emerald-400 stroke-[2.5]" />
                           ) : (
-                            <Square className="w-5 h-5 text-slate-500 hover:text-white" />
+                            <Square className="w-7 h-7 text-slate-500 hover:text-white" />
                           )}
-                        </button>
+                        </div>
                         
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-xs md:text-sm font-bold ${isChecked ? 'line-through text-slate-400' : 'text-slate-200'}`}>
+                        <div className="flex-grow min-w-0">
+                          <p className={`text-base md:text-lg lg:text-xl font-bold tracking-wide font-sans ${isChecked ? 'line-through text-slate-400' : 'text-slate-100'}`}>
                             {item.text}
                           </p>
                         </div>
                         
-                        <span className={`text-[9px] font-mono font-bold px-2.5 py-0.5 rounded uppercase shrink-0 ${
-                          isChecked ? 'bg-emerald-900/40 text-emerald-400' : 'bg-black/40 text-slate-500'
+                        <span className={`text-[10px] font-mono font-bold px-3.5 py-1.5 rounded uppercase tracking-widest shrink-0 ${
+                          isChecked ? 'bg-emerald-900/60 text-emerald-400' : 'bg-black/60 text-slate-500'
                         }`}>
                           {isChecked ? 'CONCLUÍDO' : 'PENDENTE'}
                         </span>
@@ -705,45 +783,45 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               </div>
             )}
 
-            {/* Layout Case: WEBSUPPORT OPERATOR VIDEO                      */}
+            {/* Layout Case: WEBSUPPORT OPERATOR VIDEO - ENHANCED TEXT */}
             {currentLayoutType === 'video' && (
               <div className="md:col-span-12 flex flex-col items-center justify-center space-y-4">
                 {activeSlide?.videoUrl ? (
                   <div className="aspect-video w-full bg-black rounded-2xl overflow-hidden border border-white/5 shadow-2xl relative">
                     <video src={activeSlide.videoUrl} controls loop autoPlay muted className="w-full h-full object-cover animate-fadeIn" />
-                    <div className="absolute top-2 left-2 bg-black/60 border border-white/5 text-[9px] font-mono text-white px-3 py-1 rounded">
+                    <div className="absolute top-3 left-3 bg-black/65 border border-white/5 text-[10px] font-mono text-white px-3.5 py-1 rounded tracking-widest">
                       TELEMETRIA PROCEDIMENTAL MP4 DE SUPORTE
                     </div>
                   </div>
                 ) : (
-                  <div className={`aspect-video w-full bg-[#16191E] text-slate-400 rounded-2xl flex flex-col items-center justify-center text-xs border border-dashed border-[#1E293B]`}>
+                  <div className="aspect-video w-full bg-[#16191E] text-slate-400 rounded-2xl flex flex-col items-center justify-center text-xs border border-dashed border-[#1E293B]">
                      <Layers className="w-10 h-10 text-slate-600 mb-2 animate-pulse" />
                      <span>Nenhum endereço de vídeo foi adicionado a este slide.</span>
                   </div>
                 )}
                 {activeSlide?.freeText && (
-                  <p className="text-slate-300 text-xs leading-relaxed text-center max-w-2xl">
+                  <p className="text-slate-300 text-sm md:text-lg leading-relaxed text-center max-w-3xl tracking-wide font-medium">
                     {activeSlide.freeText}
                   </p>
                 )}
               </div>
             )}
 
-            {/* Layout Case: GRAPHICAL PROCESS FLOW / FLOWCHART / TIMELINE      */}
+            {/* Layout Case: GRAPHICAL PROCESS FLOW / FLOWCHART / TIMELINE */}
             {currentLayoutType === 'flow' && (
-              <div className="md:col-span-12 space-y-4">
+              <div className="md:col-span-12 space-y-5">
                 {activeSlide?.freeText && (
-                  <p className="text-slate-350 text-xs italic text-center leading-relaxed">
+                  <p className="text-slate-300 text-sm md:text-lg italic text-center leading-relaxed font-semibold">
                     {activeSlide.freeText}
                   </p>
                 )}
 
                 {/* Vertical / Horizontal Connective Timeline Node Diagram Graph */}
-                <div className="p-4 bg-black/30 rounded-2xl border border-white/5 shadow-lg max-w-4xl mx-auto">
+                <div className="p-5 bg-black/30 rounded-2xl border border-white/5 shadow-lg max-w-5xl mx-auto">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative">
                     
                     {/* Render connectors for wide screens */}
-                    <div className="hidden md:block absolute top-[28px] left-[15%] right-[15%] h-1 bg-white/5 -z-10" />
+                    <div className="hidden md:block absolute top-[30px] left-[15%] right-[15%] h-1 bg-white/5 -z-10" />
 
                     {(activeSlide?.flowNodes && activeSlide.flowNodes.length > 0) ? (
                       activeSlide.flowNodes.map((node, nodeIdx) => {
@@ -753,7 +831,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                         return (
                           <div 
                             key={node.id}
-                            className={`flex flex-col items-center text-center p-4 rounded-xl border transition-all duration-300 relative animate-fadeIn ${
+                            className={`flex flex-col items-center text-center p-5 rounded-xl border transition-all duration-300 relative animate-fadeIn ${
                               isNodeStepActive 
                                 ? 'bg-black/60 border-blue-500 scale-102 shadow-lg' 
                                 : isNodeStepPassed 
@@ -766,7 +844,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                             }}
                           >
                             <div 
-                              className={`w-11 h-11 rounded-full flex items-center justify-center text-xs font-black font-mono shadow-md mb-3 shrink-0 ${
+                              className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-black font-mono shadow-md mb-3.5 shrink-0 ${
                                 isNodeStepActive 
                                   ? 'text-black' 
                                   : isNodeStepPassed 
@@ -780,15 +858,15 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
                               <span>0{nodeIdx + 1}</span>
                             </div>
 
-                            <p className="text-xs font-bold text-white mb-1 line-clamp-1">{node.label}</p>
+                            <p className="text-sm md:text-base font-extrabold text-white mb-1.5 line-clamp-1 truncate tracking-wider uppercase">{node.label}</p>
                             {node.description && (
-                              <p className="text-[10px] text-slate-400 line-clamp-2">{node.description}</p>
+                              <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">{node.description}</p>
                             )}
                           </div>
                         );
                       })
                     ) : (
-                      <p className="text-[11px] text-slate-500 italic py-6 text-center md:col-span-3 w-full">
+                      <p className="text-xs text-slate-500 italic py-6 text-center md:col-span-3 w-full">
                         Nenhum nó de fluxo cadastrado. Adicione seus nós de timeline/processo no editor.
                       </p>
                     )}
@@ -840,10 +918,12 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
               </div>
             )}
 
+            </div> {/* End of Scrollable Content Viewport container */}
+
             {/* ======================================================== */}
             {/* RICH SYSTEM COMPONENT RENDERING WIDGETS                  */}
             {/* ======================================================== */}
-            <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-1 gap-3.5 mt-2">
+            <div className="w-full grid grid-cols-1 gap-2.5 mt-2 shrink-0">
               
               {/* Alert Warning Component Option */}
               {activeSlide?.alertText && (
@@ -881,7 +961,7 @@ export default function PresenterMode({ presentation, onExit }: PresenterModePro
 
             {/* Progressive disclose instructions banner help indicator */}
             {activeSlide && getMaxSteps() > currentStep && (
-              <div className={`md:col-span-12 bg-black/40 p-2.5 rounded-lg border border-dashed ${theme.borderColor} flex items-center justify-between text-[11px] text-slate-400 font-mono animate-pulse mt-4`}>
+              <div className={`w-full bg-black/40 p-2 rounded-lg border border-dashed ${theme.borderColor} flex items-center justify-between text-[10px] text-slate-400 font-mono animate-pulse mt-2`}>
                 <div className="flex items-center gap-2">
                   <HelpCircle className="w-4 h-4" style={{ color: activeAccentColor }} />
                   <span>Espaço / Seta Direita / Toque tela para revelar o próximo tópico do slide!</span>

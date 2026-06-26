@@ -71,6 +71,8 @@ export default function Dashboard({
 }: DashboardProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<Category | 'Todos'>('Todos');
+  const [activeTabFilter, setActiveTabFilter] = useState<'all' | 'active' | 'pending' | 'custom'>('all');
+  const [phaseFilter, setPhaseFilter] = useState<string>('Todos');
   const [isCreating, setIsCreating] = useState(false);
 
   // New Presentation Form States
@@ -82,9 +84,6 @@ export default function Dashboard({
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('generic');
 
   // Training Audit Section States
-  const [isAuditExpanded, setIsAuditExpanded] = useState<boolean>(true);
-  const [auditFilterPhase, setAuditFilterPhase] = useState<string>('Todos');
-  const [auditSearchTerm, setAuditSearchTerm] = useState<string>('');
   const [successToast, setSuccessToast] = useState<{ message: string; moduleName: string } | null>(null);
 
   // Calculate high level KPI values
@@ -97,21 +96,24 @@ export default function Dashboard({
     ? new Date(Math.max(...presentations.map(p => new Date(p.updatedAt).getTime())))
     : null;
 
-  // Filter logic
-  const filteredPresentations = presentations.filter((pres) => {
-    const matchesSearch = pres.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      pres.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'Todos' || pres.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // 1. Find matching presentation for an audited module theme
+  const getPresentationForModule = (mod: AuditedModule) => {
+    return presentations.find(p => 
+      p.id.toLowerCase().includes(`-audit-${mod.id.toLowerCase()}-`) ||
+      p.id.toLowerCase().includes(`-audit-${mod.id.toLowerCase()}`) ||
+      p.title.toLowerCase() === mod.name.toLowerCase() || 
+      p.title.toLowerCase() === `treinamento: ${mod.name.toLowerCase()}`
+    );
+  };
 
-  // Audit filtering and calculations
-  const activeAuditedModules = AUDITED_MODULES.filter((mod) => {
-    const matchesPhase = auditFilterPhase === 'Todos' || mod.phase === auditFilterPhase;
-    const matchesSearch = mod.name.toLowerCase().includes(auditSearchTerm.toLowerCase()) || 
-                          mod.sinopse.toLowerCase().includes(auditSearchTerm.toLowerCase()) ||
-                          mod.category.toLowerCase().includes(auditSearchTerm.toLowerCase());
-    return matchesPhase && matchesSearch;
+  // 2. Filter custom, user-created presentations that don't match any static audit theme
+  const customPresentations = presentations.filter(p => {
+    return !AUDITED_MODULES.some(m => 
+      p.id.toLowerCase().includes(`-audit-${m.id.toLowerCase()}-`) ||
+      p.id.toLowerCase().includes(`-audit-${m.id.toLowerCase()}`) ||
+      p.title.toLowerCase() === m.name.toLowerCase() || 
+      p.title.toLowerCase() === `treinamento: ${m.name.toLowerCase()}`
+    );
   });
 
   const activeModulesCount = AUDITED_MODULES.filter(m => 
@@ -123,6 +125,80 @@ export default function Dashboard({
 
   const coveragePercent = Math.round((activeModulesCount / 23) * 100);
 
+  // Unified items list build
+  interface UnifiedItem {
+    id: string;
+    tipo: 'oficial' | 'customizado';
+    moduloAuditado?: AuditedModule;
+    apresentacaoAtiva?: Presentation;
+  }
+
+  const unifiedItems: UnifiedItem[] = [];
+
+  // Add the 23 Audit modules recommendations
+  AUDITED_MODULES.forEach(mod => {
+    const activePres = getPresentationForModule(mod);
+    unifiedItems.push({
+      id: `mod-audit-${mod.id}`,
+      tipo: 'oficial',
+      moduloAuditado: mod,
+      apresentacaoAtiva: activePres
+    });
+  });
+
+  // Add any custom presentations created under other titles
+  customPresentations.forEach(pres => {
+    unifiedItems.push({
+      id: `pres-custom-${pres.id}`,
+      tipo: 'customizado',
+      apresentacaoAtiva: pres
+    });
+  });
+
+  // Apply textual and categorical search filters
+  const filteredUnifiedItems = unifiedItems.filter(item => {
+    // 1. Text search mapping
+    if (searchTerm.trim() !== '') {
+      const term = searchTerm.toLowerCase();
+      if (item.tipo === 'oficial' && item.moduloAuditado) {
+        const matchesName = item.moduloAuditado.name.toLowerCase().includes(term);
+        const matchesSinopse = item.moduloAuditado.sinopse.toLowerCase().includes(term);
+        const matchesCategory = item.moduloAuditado.category.toLowerCase().includes(term);
+        if (!matchesName && !matchesSinopse && !matchesCategory) return false;
+      } else if (item.tipo === 'customizado' && item.apresentacaoAtiva) {
+        const matchesName = item.apresentacaoAtiva.title.toLowerCase().includes(term);
+        const matchesDesc = item.apresentacaoAtiva.description.toLowerCase().includes(term);
+        const matchesCategory = item.apresentacaoAtiva.category.toLowerCase().includes(term);
+        if (!matchesName && !matchesDesc && !matchesCategory) return false;
+      }
+    }
+
+    // 2. Department Category Filter (Pills)
+    if (selectedCategory !== 'Todos') {
+      if (item.tipo === 'oficial' && item.moduloAuditado?.category !== selectedCategory) return false;
+      if (item.tipo === 'customizado' && item.apresentacaoAtiva?.category !== selectedCategory) return false;
+    }
+
+    // 3. Plant Phase Filter
+    if (phaseFilter !== 'Todos') {
+      if (item.tipo === 'oficial' && item.moduloAuditado?.phase !== phaseFilter) return false;
+      if (item.tipo === 'customizado') return false;
+    }
+
+    // 4. Tab Status Filter (all, active, pending, custom)
+    if (activeTabFilter === 'active') {
+      return !!item.apresentacaoAtiva;
+    }
+    if (activeTabFilter === 'pending') {
+      return item.tipo === 'oficial' && !item.apresentacaoAtiva;
+    }
+    if (activeTabFilter === 'custom') {
+      return item.tipo === 'customizado';
+    }
+
+    return true;
+  });
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
@@ -132,7 +208,6 @@ export default function Dashboard({
     if (preloadTemplate) {
       preloadedSlides = generateSlidesForModule(selectedTemplateId, newTitle, newDesc, newCategory);
     } else {
-      // Just 1 blank slide (will trigger the soft 5-page warning, instructing the user)
       preloadedSlides = [
         {
           id: 's-t1-' + Date.now(),
@@ -191,9 +266,8 @@ export default function Dashboard({
 
     const generatedSlides = generateSlidesForModule(mod.id, mod.name, mod.sinopse, mod.category);
     
-    // Adjust slide items list to conform to types (each list item needs an id)
+    // Adjust slide items list to conform to types
     const formattedSlides = generatedSlides.map((slide, idx) => {
-      // Ensure each list item is properly typed with id if it's currently a string or has been transformed
       const listItems = slide.listItems?.map((item, lIdx) => ({
         id: item.id || `audit-item-${mod.id}-${idx}-${lIdx}-${Date.now()}`,
         text: item.text,
@@ -213,7 +287,7 @@ export default function Dashboard({
       category: mod.category,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      status: 'Publicado', // Instantly published as it meets official audit parameters!
+      status: 'Publicado',
       slides: formattedSlides
     };
 
@@ -224,22 +298,21 @@ export default function Dashboard({
       moduleName: mod.name
     });
 
-    // Auto-scroll to top to see it
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     setTimeout(() => {
       setSuccessToast(null);
-    }, 5000);
+    }, 5500);
   };
 
   const getStatusBadge = (status: Status) => {
     switch (status) {
       case 'Publicado':
-        return <span className="bg-emerald-950/50 text-emerald-400 text-[10px] font-bold px-2 py-0.5 rounded border border-emerald-900/30 uppercase tracking-widest">🟢 Publicado</span>;
+        return <span className="bg-emerald-950/60 text-emerald-400 text-[9px] font-bold px-2 py-0.5 rounded border border-emerald-900/40 uppercase tracking-widest font-mono">🟢 Publicado</span>;
       case 'Em Revisão':
-        return <span className="bg-sky-950/50 text-sky-450 text-[10px] font-bold px-2 py-0.5 rounded border border-sky-900/30 uppercase tracking-widest font-mono">🔵 Em Revisão</span>;
+        return <span className="bg-sky-950/60 text-sky-400 text-[9px] font-bold px-2 py-0.5 rounded border border-sky-900/40 uppercase tracking-widest font-mono">🔵 Em Revisão</span>;
       default:
-        return <span className="bg-amber-950/50 text-amber-400 text-[10px] font-bold px-2 py-0.5 rounded border border-amber-900/30 uppercase tracking-widest">🟡 Rascunho</span>;
+        return <span className="bg-amber-950/60 text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded border border-amber-900/40 uppercase tracking-widest font-mono">🟡 Rascunho</span>;
     }
   };
 
@@ -248,16 +321,16 @@ export default function Dashboard({
       
       {/* BEAUTIFUL FLOATING TIMEOUT TOAST NOTIFICATION */}
       {successToast && (
-        <div className="fixed top-6 right-6 z-50 max-w-sm w-full bg-[#12141a] border-l-4 border-yellow-400 p-4 rounded shadow-2xl skew-x-[-8deg] animate-slideIn">
+        <div className="fixed top-6 right-6 z-50 max-w-sm w-full bg-[#12141a] border-l-4 border-[#FAFF00] p-4 rounded shadow-2xl skew-x-[-8deg] animate-slideIn">
           <div className="flex items-start gap-3 skew-x-[8deg]">
             <div className="bg-[#FAFF00]/10 p-1.5 rounded text-[#FAFF00]">
               <Sparkles className="w-5 h-5 animate-pulse" />
             </div>
             <div className="flex-1 text-xs">
-              <h4 className="font-bold text-white font-mono uppercase tracking-wider">MÓDULO DE TREINAMENTO ATIVO</h4>
-              <p className="text-slate-350 mt-1 leading-normal font-sans">{successToast.message}</p>
+              <h4 className="font-bold text-white font-mono uppercase tracking-wider text-[11px]">COCKPIT INTELIGENTE</h4>
+              <p className="text-slate-300 mt-1 leading-normal font-sans font-medium">{successToast.message}</p>
               <div className="mt-2 text-[10px] text-[#FAFF00] font-mono flex items-center gap-1">
-                <span>Clique em "EDITAR" para customizar os slides do treinamento.</span>
+                <span>Imediatamente disponível no grid unificado.</span>
               </div>
             </div>
             <button 
@@ -311,35 +384,35 @@ export default function Dashboard({
         </div>
       </div>
       
-      {/* KEY STATS BAR */}
+      {/* COCKPIT KEY STATS BAR */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 select-none" id="stats-dashboard-grid">
         <div className="bg-[#121214] p-5 rounded border border-[#262A35] flex items-center gap-4 shadow-md">
-          <div className="w-12 h-12 bg-[#FAFF00]/10 border border-[#FAFF00]/20 rounded flex items-center justify-center text-[#FAFF00] shrink-0">
-            <PresIcon className="w-5 h-5 text-[#FAFF00]" />
+          <div className="w-12 h-12 bg-yellow-400/10 border border-yellow-400/20 rounded flex items-center justify-center text-[#FAFF00] shrink-0">
+            <Award className="w-5 h-5 text-yellow-400" />
           </div>
           <div>
-            <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase tracking-wider">TOTAL MÓDULOS (CIRCUITOS)</span>
-            <span className="text-2xl font-display italic font-black text-white leading-none">{totalCount}</span>
+            <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase tracking-wider">MATRIZ OPERACIONAL</span>
+            <span className="text-2xl font-display italic font-black text-white leading-none">23 TEMAS</span>
           </div>
         </div>
 
         <div className="bg-[#121214] p-5 rounded border border-[#262A35] flex items-center gap-4 shadow-md">
           <div className="w-12 h-12 bg-emerald-950/40 border border-emerald-900/30 rounded flex items-center justify-center text-emerald-400 shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 animate-pulse" />
           </div>
           <div>
-            <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase tracking-wider">PUBLICADOS</span>
-            <span className="text-2xl font-display italic font-black text-emerald-400 leading-none">{publishedCount}</span>
+            <span className="text-[9px] font-bold text-emerald-500 font-mono block uppercase tracking-wider">COBERTURA ATIVA</span>
+            <span className="text-2xl font-display italic font-black text-emerald-400 leading-none">{activeModulesCount} / 23 ({coveragePercent}%)</span>
           </div>
         </div>
 
         <div className="bg-[#121214] p-5 rounded border border-[#262A35] flex items-center gap-4 shadow-md">
-          <div className="w-12 h-12 bg-amber-950/40 border border-[#FAFF00]/20 rounded flex items-center justify-center text-amber-400 shrink-0">
-            <Layers className="w-5 h-5 text-amber-500" />
+          <div className="w-12 h-12 bg-amber-950/40 border border-[#FAFF00]/20 rounded flex items-center justify-center text-[#FAFF00] shrink-0">
+            <PresIcon className="w-5 h-5 text-[#FAFF00]" />
           </div>
           <div>
-            <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase tracking-wider">REVISANDO / RASCUNHOS</span>
-            <span className="text-2xl font-display italic font-black text-amber-500 leading-none">{reviewCount + draftCount}</span>
+            <span className="text-[9px] font-bold text-slate-500 font-mono block uppercase tracking-wider">CIRCUITOS OPERACIONAIS</span>
+            <span className="text-2xl font-display italic font-black text-amber-500 leading-none">{totalCount} ATIVOS</span>
           </div>
         </div>
 
@@ -356,11 +429,11 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* DASHBOARD ACTIONS HEADER */}
+      {/* NEW INTEGRATED DASHBOARD ACTIONS HEADER */}
       <div className={`flex flex-col md:flex-row md:items-center justify-between gap-4 ${theme.bgCard} p-5 ${theme.roundedCard} border ${theme.borderColor} ${theme.shadowGlow}`}>
         <div>
-          <span className={`text-[10px] font-bold font-mono ${theme.textSubtitle} uppercase tracking-widest block`}>PAINEL DE COMANDO TELEMÉTRICO</span>
-          <h2 className={`text-2xl ${theme.fontDisplay} ${theme.textTitle} mt-1 uppercase tracking-tight`}>GERENCIAMENTO DE CIRCUITOS</h2>
+          <span className={`text-[10px] font-bold font-mono ${theme.textSubtitle} uppercase tracking-widest block`}>SISTEMA DE GERENCIAMENTO UNIFICADO</span>
+          <h2 className={`text-2xl ${theme.fontDisplay} ${theme.textTitle} mt-1 uppercase tracking-tight`}>COCKPIT DE CAPACITAÇÃO E MATRIZ</h2>
         </div>
         <button
           onClick={() => setIsCreating(true)}
@@ -369,425 +442,327 @@ export default function Dashboard({
         >
           <span className={`inline-block ${theme.unskewAngle ? theme.unskewAngle : ''} flex items-center gap-1.5`}>
             <Plus className="w-4 h-4 stroke-[3]" />
-            NOVO TREINAMENTO
+            CRIAR CIRCUITO LIVRE
           </span>
           <div className="absolute inset-0 w-1/3 h-full bg-white/20 -translate-x-full animate-shimmer pointer-events-none" />
         </button>
       </div>
 
       {/* FILTER BUTTONS & SEARCH BAR */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        
-        {/* Categories Pills bar */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 lg:pb-0 scrollbar-none select-none">
+      <div className="space-y-4">
+        {/* Row 1: Active Tab Filters (Status de Implantação e Customizados) */}
+        <div className="flex flex-col md:flex-row gap-3 items-start md:items-center justify-between">
+          <div className="flex flex-wrap items-center gap-1.5 select-none">
+            {[
+              { id: 'all', label: '🎯 Todos os Temas', count: unifiedItems.length },
+              { id: 'active', label: '🟢 Implantados (Ativos)', count: presentations.length },
+              { id: 'pending', label: '⚪ Pendentes', count: 23 - activeModulesCount },
+              { id: 'custom', label: '🛠️ Customizados/Livres', count: customPresentations.length }
+            ].map((tab) => {
+              const active = activeTabFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTabFilter(tab.id as any);
+                    // Reset phase filter on some tabs to make UX clean
+                    if (tab.id === 'custom') setPhaseFilter('Todos');
+                  }}
+                  className={`px-4 py-2 rounded text-xs font-mono font-black border transition cursor-pointer flex items-center gap-2 skew-x-[-12deg] ${
+                    active
+                      ? 'bg-yellow-400 text-black border-yellow-400 font-black shadow-md shadow-yellow-950/20'
+                      : 'bg-[#121214] hover:bg-[#1E1E22] text-slate-400 border-[#262A35]'
+                  }`}
+                >
+                  <span className="inline-block skew-x-[12deg] flex items-center gap-1.5">
+                    {tab.label.toUpperCase()}
+                    <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${active ? 'bg-black/20 text-black' : 'bg-slate-900 text-[#FAFF00] border border-[#262A35]'}`}>
+                      {tab.count}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Unified search and phase tool in row 1 right side */}
+          <div className="flex items-center gap-2 w-full md:w-auto">
+            {activeTabFilter !== 'custom' && (
+              <select
+                value={phaseFilter}
+                onChange={(e) => setPhaseFilter(e.target.value)}
+                className="px-3 py-1.5 border border-[#262A35] bg-[#121214] text-xs font-mono text-slate-350 rounded cursor-pointer skew-x-[-10deg] focus:outline-none focus:ring-1 focus:ring-yellow-400/30"
+              >
+                <option value="Todos" className="bg-[#121214]">TODAS AS FASES</option>
+                <option value="Fase 1" className="bg-[#121214]">FASE 1: PRIMEIRO LOTE</option>
+                <option value="Fase 2" className="bg-[#121214]">FASE 2: ESTABILIZAÇÃO</option>
+                <option value="Fase 3" className="bg-[#121214]">FASE 3: CRESCIMENTO</option>
+                <option value="Fase 4" className="bg-[#121214]">FASE 4: CONSOLIDADO</option>
+              </select>
+            )}
+
+            <div className="relative w-full md:max-w-xs bg-[#121214] border border-[#262A35] rounded select-none">
+              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
+              <input
+                type="text"
+                placeholder="Mapear por palavra-chave..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-1.5 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-yellow-400/30"
+                id="input-presentation-filter-search"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Row 2: Secondary Pills by Department (Cada categoria de Matriz) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 scrollbar-none select-none border-b border-white/5 pt-1">
           <button
             onClick={() => setSelectedCategory('Todos')}
-            className={`px-3.5 py-1.5 rounded text-xs font-mono font-bold tracking-wide transition border cursor-pointer shrink-0 skew-x-[-12deg] ${
+            className={`px-3 py-1 text-[10.5px] font-mono font-bold tracking-wide transition border cursor-pointer shrink-0 skew-x-[-12deg] ${
               selectedCategory === 'Todos'
-                ? 'bg-[#FAFF00]/15 text-[#FAFF00] border-[#FAFF00]/30 shadow-sm'
-                : 'bg-[#121214] hover:bg-[#1E1E22] text-slate-400 border-[#262A35]'
+                ? 'bg-[#FAFF00]/15 text-[#FAFF00] border-[#FAFF00]/30 shadow-xs'
+                : 'bg-transparent text-slate-400 border-[#1E293B] hover:bg-slate-900/30'
             }`}
           >
-            <span className="inline-block skew-x-[12deg]">TODOS OS CIRCUITOS</span>
+            <span className="inline-block skew-x-[12deg] uppercase">Todos os Setores</span>
           </button>
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded text-xs font-mono font-bold tracking-wide transition border cursor-pointer shrink-0 skew-x-[-12deg] ${
+              className={`px-3 py-1 text-[10.5px] font-mono font-bold tracking-wide transition border cursor-pointer shrink-0 skew-x-[-12deg] ${
                 selectedCategory === cat
-                  ? 'bg-[#FAFF00]/15 text-[#FAFF00] border-[#FAFF00]/30 shadow-sm'
-                  : 'bg-[#121214] hover:bg-[#1E1E22] text-slate-400 border-[#262A35]'
+                  ? 'bg-[#FAFF00]/15 text-[#FAFF00] border-[#FAFF00]/30 shadow-xs'
+                  : 'bg-transparent text-slate-400 border-[#1E293B] hover:bg-slate-900/30'
               }`}
             >
               <span className="inline-block skew-x-[12deg] uppercase">{cat}</span>
             </button>
           ))}
         </div>
-
-        {/* Text Filter input */}
-        <div className="relative w-full lg:max-w-xs shrink-0 bg-[#121214] border border-[#262A35] rounded select-none">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3.5" />
-          <input
-            type="text"
-            placeholder="Mapear por palavra-chave..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#FAFF00]/30"
-            id="input-presentation-filter-search"
-          />
-        </div>
       </div>
 
-      {/* DETAILED CONTENT PRESENTATIONS GRID VIEW */}
-      {filteredPresentations.length === 0 ? (
-        <div className="text-center py-16 bg-[#0F1217] rounded-xl border border-dashed border-[#1E293B]">
-          <p className="text-slate-400 text-sm font-semibold">Nenhuma apresentação correspondente encontrada.</p>
-          <p className="text-xs text-slate-550 mt-1">Crie um novo módulo de treinamento para iniciar suas operações.</p>
+      {/* COCKPIT COMPREHENSIVE UNIFIED GRID VIEW */}
+      {filteredUnifiedItems.length === 0 ? (
+        <div className="text-center py-20 bg-[#0A0D14] rounded-lg border border-dashed border-[#1E293B] flex flex-col items-center justify-center">
+          <Info className="w-8 h-8 text-slate-500 mb-3" />
+          <p className="text-slate-400 text-sm font-semibold">Nenhum circuito ou recomendação correspondente encontrada.</p>
+          <p className="text-xs text-slate-650 mt-1">Sua seleção ou termos de busca filtraram todos os módulos produtivos.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="presentations-deck-grid">
-          {filteredPresentations.map((pres) => {
-            const slideCount = pres.slides.length;
-            const isSlideCountInvalid = slideCount < 5 || slideCount > 8;
+          {filteredUnifiedItems.map((item) => {
+            // Check if card has active presentation or is just static audited schema
+            const isCustom = item.tipo === 'customizado';
+            const pres = item.apresentacaoAtiva;
+            const hasActive = !!pres;
+            const mod = item.moduloAuditado;
+
+            // Compute details for layout representation
+            const categoryLabel = isCustom ? (pres?.category || 'Customizado') : (mod?.category || 'Geral');
+            const phaseLabel = isCustom ? 'Customizado' : (mod?.phase || 'Fase 1');
+            const titleValue = isCustom ? (pres?.title || '') : (mod?.name || '');
+            const descValue = isCustom ? (pres?.description || '') : (mod?.sinopse || '');
+            const slideCount = pres?.slides.length || mod?.slidesCount || 6;
+            const isSlideCountInvalid = hasActive && (slideCount < 5 || slideCount > 8);
+
+            // Audit details
+            const complexity = mod?.complexity || 'Médio';
+            const format = mod?.format || 'Passo a Passo';
+            const bVal = mod?.businessValue || 'Médio';
+
+            const complexityColors = {
+              'Muito Simples': 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30',
+              'Simples': 'bg-teal-950/40 text-teal-400 border-teal-900/40',
+              'Médio': 'bg-blue-950/40 text-blue-400 border-blue-900/40',
+              'Complexo': 'bg-amber-950/40 text-amber-500 border-amber-900/40',
+              'Muito Complexo': 'bg-red-950/40 text-red-500 border-red-900/40'
+            };
 
             return (
               <div
-                key={pres.id}
-                className="group bg-[#121214] rounded-lg border border-[#262A35] hover:border-[#FAFF00]/40 hover:ring-1 hover:ring-[#FAFF00]/20 hover:shadow-2xl hover:shadow-[#FAFF00]/5 transition-all duration-300 flex flex-col justify-between overflow-hidden relative"
-                id={`card-pres-${pres.id}`}
+                key={item.id}
+                className={`group rounded-lg border transition-all duration-300 flex flex-col justify-between overflow-hidden relative ${
+                  hasActive
+                    ? 'bg-[#121214] border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.02)] hover:border-emerald-400/60 hover:ring-1 hover:ring-emerald-400/20'
+                    : 'bg-[#0A0D14]/80 border-[#262A35] hover:bg-[#0E121C] hover:border-[#FAFF00]/40'
+                }`}
+                id={`card-unified-${item.id}`}
               >
-                {/* Visual Preview Deck simulation */}
-                <div className="h-32 bg-[#1C1C22]/80 flex items-center justify-center border-b border-[#262A35] overflow-hidden relative">
+                {/* Upper Deck simulation badge */}
+                <div className={`h-28 flex items-center justify-center border-b border-[#262A35] overflow-hidden relative ${
+                  hasActive ? 'bg-[#1C1C22]/80' : 'bg-slate-950/40'
+                }`}>
                   <div className="absolute inset-0 bg-carbon-pattern opacity-10" />
-                  <div className="scale-75 opacity-40 group-hover:opacity-100 group-hover:scale-95 transition-all duration-300 relative z-10">
-                    <div className="w-40 h-24 bg-[#050505] border border-[#262A35] rounded shadow-2xl flex flex-col p-2.5">
-                      <div className="w-12 h-2 bg-[#FAFF00]/40 rounded mb-2"></div>
+                  
+                  {/* Status label ribbons */}
+                  <div className="absolute top-3 left-3 flex flex-wrap gap-1 select-none z-20 shrink-0">
+                    <span className="text-[8px] font-black font-mono tracking-wider text-slate-400 bg-slate-900/80 border border-slate-750 px-1.5 py-0.5 rounded uppercase">
+                      {categoryLabel}
+                    </span>
+                    {!isCustom && (
+                      <span className={`text-[8.5px] font-black font-mono px-1.5 py-0.5 rounded border ${
+                        phaseLabel === 'Fase 1' 
+                          ? 'bg-red-950/40 text-red-400 border-red-900/30' 
+                          : phaseLabel === 'Fase 2' 
+                            ? 'bg-amber-950/40 text-amber-400 border-amber-900/30' 
+                            : phaseLabel === 'Fase 3'
+                              ? 'bg-blue-950/40 text-blue-400 border-blue-900/30'
+                              : 'bg-purple-950/40 text-purple-400 border-purple-900/30'
+                      }`}>
+                        {phaseLabel.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  {hasActive ? (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 text-[8.5px] font-bold font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-900/40 uppercase">
+                      <CheckCircle2 className="w-2.5 h-2.5 stroke-[3]" /> CIRCUITADO
+                    </div>
+                  ) : (
+                    <div className="absolute top-3 right-3 flex items-center gap-1 text-[8.5px] font-bold font-mono text-slate-500 bg-slate-900/60 px-2 py-0.5 rounded border border-slate-800 uppercase">
+                      ⚪ AGUARDANDO
+                    </div>
+                  )}
+
+                  {/* Aesthetic visual miniature screen */}
+                  <div className="scale-75 opacity-40 group-hover:opacity-100 group-hover:scale-90 transition-all duration-300 relative z-10">
+                    <div className={`w-36 h-20 border rounded shadow-2xl flex flex-col p-2 ${
+                      hasActive ? 'bg-[#050505] border-emerald-500/20' : 'bg-[#020202] border-slate-800'
+                    }`}>
+                      <div className={`w-10 h-1.5 rounded mb-2 ${hasActive ? 'bg-emerald-400/30' : 'bg-slate-700/30'}`}></div>
                       <div className="flex gap-1.5 flex-1">
-                        <div className="flex-1 bg-zinc-900/50 rounded p-1 flex flex-col justify-between">
-                          <div className="w-full h-1 bg-zinc-800 rounded"></div>
-                          <div className="w-2/3 h-1 bg-zinc-800 rounded"></div>
+                        <div className="flex-1 bg-zinc-950 rounded p-1 flex flex-col justify-between">
+                          <div className="w-full h-1 bg-zinc-900 rounded"></div>
+                          <div className="w-2/3 h-1 bg-zinc-900 rounded"></div>
                         </div>
-                        <div className="w-8 h-8 rounded bg-[#FAFF00]/10 border border-[#FAFF00]/20 flex items-center justify-center">
-                          <PresIcon className="w-3.5 h-3.5 text-[#FAFF00]" />
+                        <div className={`w-6 h-6 rounded flex items-center justify-center ${
+                          hasActive ? 'bg-emerald-950/45 border border-emerald-900/30 text-emerald-400' : 'bg-slate-950 border border-slate-850 text-slate-600'
+                        }`}>
+                          <PresIcon className="w-3 h-3" />
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-5 flex-grow relative">
-                  <div className="flex items-center justify-between gap-2 mb-2 select-none">
-                    <span className="text-[10px] font-bold font-mono tracking-wider text-[#FAFF00] uppercase">
-                      {pres.category}
+                {/* Card core metadata body */}
+                <div className="p-4 flex-grow relative space-y-3">
+                  <div className="flex items-center justify-between pointer-events-none select-none shrink-0">
+                    <span className="text-[8.5px] font-mono tracking-wider text-slate-500 font-bold uppercase">
+                      ID: {isCustom ? 'LIVRE' : `RECOMENDADO (#${mod?.id})`}
                     </span>
-                    {getStatusBadge(pres.status)}
+                    {hasActive && getStatusBadge(pres.status)}
                   </div>
 
-                  <h3 className="font-display italic font-black text-white text-base group-hover:text-[#FAFF00] transition-colors cursor-pointer" onClick={() => onSelectPresentation(pres.id, false)}>
-                    {pres.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 font-normal line-clamp-3 mt-1.5 leading-relaxed">
-                    {pres.description}
-                  </p>
+                  <div>
+                    <h3 className="font-display italic font-black text-white text-base group-hover:text-[#FAFF00] transition-colors leading-tight uppercase">
+                      {titleValue}
+                    </h3>
+                    <p className="text-[11.5px] text-slate-400 font-normal line-clamp-2 mt-1 leading-normal" title={descValue}>
+                      {descValue}
+                    </p>
+                  </div>
 
-                  <div className="h-px bg-[#262A35] my-4" />
-
-                  {/* Slides Count Alert Gauge & KPI */}
-                  <div className="flex items-center justify-between mb-1 select-none">
-                    <span className="text-[10px] text-zinc-500 font-mono text-zinc-550">TAMANHO DO CIRCUITO</span>
-                    <span className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded border ${
-                      isSlideCountInvalid 
-                        ? 'bg-amber-950/40 text-amber-400 border-amber-900/20' 
-                        : 'bg-[#FAFF00]/10 text-[#FAFF00] border-[#FAFF00]/20'
-                    }`}>
-                      {slideCount} LAPS
-                    </span>
+                  {/* Telemetrical details for both (official audit and active) */}
+                  <div className="grid grid-cols-2 gap-2 text-[9px] font-mono border-t border-[#1C1F26] pt-3 text-slate-500 leading-snug">
+                    <div>
+                      <span className="block text-slate-600">COMPLEXIDADE:</span>
+                      <span className={`inline-block font-bold text-[8.5px] px-1 py-0.2 rounded border uppercase mt-0.5 ${complexityColors[complexity as keyof typeof complexityColors]}`}>
+                        {complexity}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="block text-slate-600">TAMANHO:</span>
+                      <span className="font-bold text-slate-350">{slideCount} LAPS (SLIDES)</span>
+                    </div>
+                    <div>
+                      <span className="block text-slate-600">VALOR OPERACIONAL:</span>
+                      <span className={`font-bold ${bVal === 'Muito Alto' ? 'text-emerald-400' : 'text-slate-300'}`}>
+                        {bVal.toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="block text-slate-600">DIRECIONAMENTO:</span>
+                      <span className="font-semibold text-slate-350 truncate block" title={format}>
+                        {format}
+                      </span>
+                    </div>
                   </div>
 
                   {isSlideCountInvalid && (
-                    <div className="flex items-start gap-1 p-1.5 bg-amber-950/20 border border-amber-900/30 rounded text-[10px] text-amber-400 mt-2 font-mono">
-                      <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <div className="flex items-start gap-1 p-1.5 bg-[#FAFF00]/5 border border-[#FAFF00]/10 rounded text-[9.5px] text-[#FAFF00] font-mono">
+                      <AlertCircle className="w-3.5 h-3.5 text-yellow-500 shrink-0" />
                       <p className="leading-snug">Sugestão: Circuito ideal possui entre 5 e 8 LAPS.</p>
                     </div>
                   )}
                 </div>
 
-                {/* Card Operations Bar Footer */}
-                <div className="px-5 py-3 bg-[#0A0C10] border-t border-[#262A35] flex items-center justify-between">
-                  <span className="text-[9px] font-mono text-zinc-500">
-                    LAP TIME: {new Date(pres.updatedAt).toLocaleDateString()}
-                  </span>
+                {/* Operations rodapé bar */}
+                <div className="px-4 py-3 bg-[#0A0C10] border-t border-[#262A35]">
+                  {hasActive ? (
+                    // Controls if training is generated and live
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono text-slate-500">
+                        LAP TIME: {new Date(pres.updatedAt).toLocaleDateString()}
+                      </span>
 
-                  <div className="flex items-center gap-1 select-none">
+                      <div className="flex items-center gap-1 select-none">
+                        <button
+                          onClick={() => onSelectPresentation(pres.id, true)}
+                          className="p-1.5 text-slate-400 hover:text-emerald-400 hover:bg-emerald-950/20 rounded transition cursor-pointer"
+                          title="Projetar Treinamento (Apresentar no Cockpit)"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDuplicatePresentation(pres.id)}
+                          className="p-1.5 text-slate-400 hover:text-white hover:bg-[#1C1C22] rounded transition cursor-pointer"
+                          title="Duplicar Módulo"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onDeletePresentation(pres.id)}
+                          className="p-1.5 text-red-450 hover:text-red-400 hover:bg-red-950/20 rounded transition cursor-pointer"
+                          title="Deletar Módulo do Painel"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => onSelectPresentation(pres.id, false)}
+                          className="flex items-center gap-1 pl-2.5 pr-2 py-1 bg-yellow-400 hover:bg-yellow-350 text-black font-black text-[9.5px] rounded cursor-pointer transition skew-x-[-12deg]"
+                        >
+                          <span className="inline-block skew-x-[12deg] flex items-center gap-1 font-mono">
+                            EDITAR
+                            <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Button to generate training instantly
                     <button
-                      onClick={() => onSelectPresentation(pres.id, true)}
-                      className="p-1.5 text-slate-400 hover:text-[#FAFF00] hover:bg-[#1C1C22] rounded transition cursor-pointer"
-                      title="Projetar Treinamento (Apresentar)"
+                      onClick={() => {
+                        if (!isCustom && mod) {
+                          handleGenerateFromAudit(mod);
+                        }
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 text-[10px] font-black italic rounded transition cursor-pointer font-mono bg-yellow-400 hover:bg-yellow-350 text-black shadow-md skew-x-[-12deg]"
                     >
-                      <Play className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => onDuplicatePresentation(pres.id)}
-                      className="p-1.5 text-slate-400 hover:text-white hover:bg-[#1C1C22] rounded transition cursor-pointer"
-                      title="Duplicar Módulo"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => onDeletePresentation(pres.id)}
-                      className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-950/20 rounded transition cursor-pointer"
-                      title="Deletar Módulo"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => onSelectPresentation(pres.id, false)}
-                      className="flex items-center gap-1 pl-2.5 pr-2 py-1 bg-[#FAFF00] hover:bg-[#E6EB00] text-black font-black text-[10px] rounded cursor-pointer transition skew-x-[-12deg]"
-                    >
-                      <span className="inline-block skew-x-[12deg] flex items-center gap-1 font-mono">
-                        EDITAR
-                        <ArrowRight className="w-3 h-3 stroke-[2.5]" />
+                      <span className="inline-block skew-x-[12deg] flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
+                        ⚡ AUTO-GERAR TREINAMENTO AUDITADO
                       </span>
                     </button>
-                  </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       )}
-
-      {/* INDUSTRIAL OS COMPREHENSIVE TRAINING AUDIT & SEED PANEL */}
-      <div className={`mt-10 ${theme.bgCard} ${theme.roundedCard} border ${theme.borderColor} overflow-hidden ${theme.shadowGlow}`} id="training-audit-comprehensive-panel">
-        
-        {/* Panel Collapsible Header */}
-        <div 
-          onClick={() => setIsAuditExpanded(!isAuditExpanded)}
-          className={`p-5 flex items-center justify-between cursor-pointer border-b ${theme.borderColor} hover:bg-slate-900/25 transition-colors select-none`}
-        >
-          <div className="flex items-center gap-3">
-            <div className={`w-8 h-8 rounded ${theme.bgAccent} border ${theme.borderAccent || theme.borderColor} flex items-center justify-center ${theme.textPrimaryAccent}`}>
-              <Award className="w-4 h-4 text-yellow-400" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-bold font-mono ${theme.textSubtitle} uppercase tracking-widest block`}>MATRIZ DE CAPACITAÇÃO INDUSTRIAL OS (CONFORME AUDITORIA)</span>
-                <span className="bg-[#FAFF00]/10 text-[#FAFF00] border border-[#FAFF00]/25 text-[8.5px] px-1.5 py-0.5 rounded font-mono font-bold animate-pulse">23 TEMAS RECOMENDADOS</span>
-              </div>
-              <h2 className={`text-xl ${theme.fontDisplay} ${theme.textTitle} font-bold mt-1 uppercase tracking-tight`}>
-                Diagnóstico e Geração Instantânea de Circuitos
-              </h2>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end text-right font-mono">
-              <span className="text-[10px] text-slate-500">COBERTURA DA PLANTA</span>
-              <span className={`text-xs font-bold ${coveragePercent > 50 ? 'text-emerald-400' : 'text-yellow-500'}`}>
-                {activeModulesCount} / 23 ({coveragePercent}%) ATIVOS
-              </span>
-            </div>
-            <button className="p-1.5 hover:bg-slate-800/40 rounded transition">
-              {isAuditExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Panel Core Content */}
-        {isAuditExpanded && (
-          <div className="p-6 space-y-6 animate-fadeIn select-none">
-            
-            {/* AUDIT COGNITIVE INTRO & ACCORDION KPIs */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1">
-                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Taxa de Implantação</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-display font-black text-white">{activeModulesCount}</span>
-                  <span className="text-xs text-slate-500 font-mono">módulos gerados</span>
-                </div>
-                {/* Micro slider rating */}
-                <div className="w-full bg-slate-850 h-1.5 rounded-full overflow-hidden mt-2">
-                  <div className="bg-gradient-to-r from-yellow-500 to-emerald-400 h-full transition-all" style={{ width: `${coveragePercent}%` }} />
-                </div>
-              </div>
-
-              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1">
-                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Fase Atual Recomendada</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-display font-black text-yellow-400">FASE 1</span>
-                  <span className="text-xs text-slate-500 font-mono font-sans">Alta Prioridade</span>
-                </div>
-                <p className="text-[9px] text-slate-500 font-sans mt-1.5 leading-snug">
-                  Módulos fundamentais comerciais e cadastros iniciais de chão.
-                </p>
-              </div>
-
-              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1 block">
-                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Média de Laps Auditados</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-display font-black text-white">7.2</span>
-                  <span className="text-xs text-slate-500 font-mono">slides/módulo</span>
-                </div>
-                <p className="text-[9px] text-slate-500 font-sans mt-1.5 leading-snug">
-                  Estruturação otimizada para evitar exaustão cognitiva no operador.
-                </p>
-              </div>
-
-              <div className="bg-[#0A0D14] p-4 rounded-lg border border-[#1E293B] space-y-1">
-                <span className="text-[9px] font-bold font-mono text-slate-500 uppercase tracking-wide block">Maturidade do Sistema</span>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-display font-black text-emerald-400">Excelente</span>
-                  <span className="text-xs text-slate-500 font-mono font-sans">23 módulos</span>
-                </div>
-                <p className="text-[9px] text-slate-500 font-sans mt-1.5 leading-snug">
-                  Matriz completa cobrando engenharia, produção e qualidade.
-                </p>
-              </div>
-            </div>
-
-            {/* AUDIT FILTER BAR & RESEARCH */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-t border-[#1E293B] pt-5">
-              
-              {/* Phases selectors */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1.5 lg:pb-0 scrollbar-none">
-                {[
-                  { id: 'Todos', label: 'Todos os Módulos' },
-                  { id: 'Fase 1', label: 'Fase 1: Primeiro Lote' },
-                  { id: 'Fase 2', label: 'Fase 2: Estabilização' },
-                  { id: 'Fase 3', label: 'Fase 3: Crescimento' },
-                  { id: 'Fase 4', label: 'Fase 4: Consolidado' }
-                ].map((ph) => {
-                  const active = auditFilterPhase === ph.id;
-                  return (
-                    <button
-                      key={ph.id}
-                      onClick={() => setAuditFilterPhase(ph.id)}
-                      className={`px-3 py-1 text-[10.5px] font-mono font-bold tracking-wide transition border cursor-pointer shrink-0 skew-x-[-12deg] ${
-                        active 
-                          ? 'bg-yellow-400/15 text-yellow-400 border-yellow-400/30 shadow-sm'
-                          : 'bg-transparent text-slate-400 border-[#1E293B] hover:bg-slate-900/30'
-                      }`}
-                    >
-                      <span className="inline-block skew-x-[12deg] uppercase">{ph.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Research Input */}
-              <div className="relative w-full lg:max-w-xs shrink-0 bg-[#0A0D14] border border-[#1E293B] rounded">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
-                <input
-                  type="text"
-                  placeholder="Pesquisar na auditoria..."
-                  value={auditSearchTerm}
-                  onChange={(e) => setAuditSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 bg-transparent text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-yellow-400/30"
-                />
-              </div>
-            </div>
-
-            {/* AUDITED MODULES DYNAMIC LIST / CARDS GRID */}
-            {activeAuditedModules.length === 0 ? (
-              <div className="text-center py-10 bg-[#0A0D14] rounded-lg border border-dashed border-[#1E293B]">
-                <p className="text-slate-400 text-xs">Nenhum tema encontrado na auditoria de treinamentos para esta seleção.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {activeAuditedModules.map((mod) => {
-                  const hasMatchingPresentation = presentations.some(p => 
-                    p.title.toLowerCase() === mod.name.toLowerCase() || 
-                    p.title.toLowerCase() === `treinamento: ${mod.name.toLowerCase()}`
-                  );
-                  
-                  // Color indicators for complexity badges
-                  const complexityColors = {
-                    'Muito Simples': 'bg-emerald-950/40 text-emerald-400 border-emerald-900/30',
-                    'Simples': 'bg-teal-950/40 text-teal-400 border-teal-900/30',
-                    'Médio': 'bg-blue-950/40 text-blue-400 border-blue-900/30',
-                    'Complexo': 'bg-amber-950/40 text-amber-500 border-amber-900/30',
-                    'Muito Complexo': 'bg-red-950/40 text-red-500 border-red-900/30'
-                  };
-
-                  return (
-                    <div 
-                      key={mod.id} 
-                      className={`relative bg-[#0A0D14]/80 p-5 rounded-lg border transition-all duration-300 flex flex-col justify-between hover:bg-[#0E121C] group ${
-                        hasMatchingPresentation 
-                          ? 'border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.02)]' 
-                          : 'border-[#1E293B] hover:border-yellow-500/30'
-                      }`}
-                    >
-                      {/* Status indicator ribbon top-right */}
-                      {hasMatchingPresentation && (
-                        <div className="absolute top-3 right-4 flex items-center gap-1 text-[8.5px] font-bold font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-900/30 uppercase">
-                          <CheckCircle2 className="w-2.5 h-2.5 stroke-[3]" /> GERADO
-                        </div>
-                      )}
-
-                      <div className="space-y-3">
-                        {/* Categorization headers */}
-                        <div className="flex flex-wrap items-center gap-1.5 select-none shrink-0">
-                          <span className="text-[8px] font-bold font-mono tracking-wider text-slate-500 uppercase">
-                            {mod.category}
-                          </span>
-                          <span className={`text-[8px] font-bold font-mono px-1.5 py-0.5 rounded border ${
-                            mod.phase === 'Fase 1' 
-                              ? 'bg-red-950/30 text-red-400 border-red-900/20' 
-                              : mod.phase === 'Fase 2' 
-                                ? 'bg-amber-950/30 text-amber-400 border-amber-900/20' 
-                                : mod.phase === 'Fase 3'
-                                  ? 'bg-blue-950/30 text-blue-400 border-blue-900/20'
-                                  : 'bg-purple-950/30 text-purple-400 border-purple-900/20'
-                          }`}>
-                            {mod.phase.toUpperCase()}
-                          </span>
-                        </div>
-
-                        <div>
-                          <h3 className="font-display italic font-black text-sm text-white group-hover:text-yellow-400 transition-colors uppercase">
-                            {mod.name}
-                          </h3>
-                          <p className="text-[11px] text-slate-400 mt-1 lines-clamp-3 leading-relaxed">
-                            {mod.sinopse}
-                          </p>
-                        </div>
-
-                        {/* Audit Details Grid */}
-                        <div className="grid grid-cols-2 gap-2 text-[9px] font-mono border-t border-[#1C1F26] pt-3 text-slate-500">
-                          <div>
-                            <span className="block text-slate-600">COMPLEXIDADE:</span>
-                            <span className={`inline-block font-bold text-[8.5px] px-1 py-0.2 rounded border uppercase mt-0.5 ${complexityColors[mod.complexity as keyof typeof complexityColors]}`}>
-                              {mod.complexity}
-                            </span>
-                          </div>
-                          <div>
-                            <span className="block text-slate-600">TAMANHO IDEAL:</span>
-                            <span className="font-bold text-slate-350">{mod.slidesCount} LAPS (SLIDES)</span>
-                          </div>
-                          <div>
-                            <span className="block text-slate-600">FORMATO DIRECIONADO:</span>
-                            <span className="font-semibold text-slate-350 truncate block" title={mod.format}>{mod.format}</span>
-                          </div>
-                          <div>
-                            <span className="block text-slate-600">VALOR OPERACIONAL:</span>
-                            <span className={`font-bold ${mod.businessValue === 'Muito Alto' ? 'text-emerald-400' : 'text-slate-300'}`}>{mod.businessValue.toUpperCase()}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Instant seed button trigger */}
-                      <div className="mt-5 select-none pt-3 border-t border-[#1C1F26]">
-                        <button
-                          onClick={() => handleGenerateFromAudit(mod)}
-                          className={`w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] font-black italic rounded transition cursor-pointer font-mono skew-x-[-12deg] ${
-                            hasMatchingPresentation 
-                              ? 'bg-[#1C1F26] hover:bg-emerald-950/30 text-slate-350 hover:text-emerald-400 hover:border hover:border-emerald-500/20'
-                              : 'bg-yellow-400 hover:bg-yellow-350 text-black shadow-md shadow-yellow-950/10'
-                          }`}
-                        >
-                          <span className="inline-block skew-x-[12deg] flex items-center gap-1">
-                            <Sparkles className="w-3.5 h-3.5 stroke-[2.5]" />
-                            {hasMatchingPresentation ? 'RE-GERAR CIRCUITO' : '⚡ AUTO-GERAR CIRCUITO'}
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            
-            <div className="text-[10px] font-mono text-slate-500 flex items-center gap-1.5 select-none border-t border-[#1E293B] pt-4">
-              <Info className="w-3.5 h-3.5 text-blue-500 shrink-0" />
-              <span>
-                Cada circuito gerado automaticamente já contém um roteiro de 5 a 8 slides estruturados em estrita conformidade com os dados reais de auditoria do Industrial OS.
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
 
       {/* POPUP: ADD NEW PRESENTATION MODAL */}
       {isCreating && (
